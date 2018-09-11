@@ -1,0 +1,13 @@
+.DS_Store
+*.iml
+*.orig
+*.vcxproj.user
+.editorconfig
+*.patch
+.idea
+.classpath
+.project
+.settings
+target
+build
+.history/
