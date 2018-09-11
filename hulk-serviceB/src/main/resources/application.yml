@@ -1,0 +1,19 @@
+server:
+  port: 8000
+#  context-path: /test
+spring:
+  aop:
+    proxyTargetClass: true
+  application:
+    name: hulkServiceB
+eureka:
+  instance:
+      preferIpAddress: true
+
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 15000

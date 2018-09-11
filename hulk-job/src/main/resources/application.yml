@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: hulk-job
+eureka:
+  instance:
+      preferIpAddress: true
+  client:
+    serviceUrl:
+      defaultZone: ${eureka.serviceUrl.defaultZone}
+logging:
+  config: /apps/config/logconfig/hulk-logback.xml
