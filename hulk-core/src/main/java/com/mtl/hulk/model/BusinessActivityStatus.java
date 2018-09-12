@@ -10,7 +10,7 @@ public enum BusinessActivityStatus {
 
     COMMITTING(4, "commit阶段"),
 
-    COMMITING_FAILED(5, "commit"),
+    COMMITING_FAILED(5, "commit失败"),
 
     COMMITTED(6, "commit成功"),
 

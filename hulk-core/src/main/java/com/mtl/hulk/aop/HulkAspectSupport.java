@@ -3,7 +3,6 @@ package com.mtl.hulk.aop;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.AbstractHulk;
 import com.mtl.hulk.bam.BusinessActivityManagerImpl;
-import com.mtl.hulk.detector.TimeoutDetector;
 import com.mtl.hulk.logger.BusinessActivityLoggerExceptionThread;
 import com.mtl.hulk.logger.BusinessActivityLoggerThread;
 import org.springframework.beans.BeansException;
@@ -47,7 +46,6 @@ public abstract class HulkAspectSupport extends AbstractHulk implements BeanFact
         bam.setLoggerExecutor(loggerExecutor);
         bam.setLoggerThread(loggerThread);
         bam.setLoggerExceptionThread(loggerExceptionThread);
-        bam.setTimeoutDetector(new TimeoutDetector(bam.getListener().getDataSource(), bam.getProperties()));
     }
 
 }

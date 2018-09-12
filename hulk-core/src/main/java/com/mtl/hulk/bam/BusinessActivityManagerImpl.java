@@ -2,7 +2,6 @@ package com.mtl.hulk.bam;
 
 import com.mtl.hulk.AbstractHulk;
 import com.mtl.hulk.context.RuntimeContext;
-import com.mtl.hulk.detector.TimeoutDetector;
 import com.mtl.hulk.listener.BusinessActivityListener;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.model.AtomicAction;
@@ -21,7 +20,6 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
     private final Logger logger = LoggerFactory.getLogger(BusinessActivityManagerImpl.class);
 
     private BusinessActivityListener listener;
-    private TimeoutDetector timeoutDetector;
 
     public BusinessActivityManagerImpl(HulkProperties properties, BusinessActivityListener listener, ApplicationContext applicationContext) {
         super(properties, applicationContext);
@@ -78,14 +76,6 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
 
     public HulkProperties getProperties() {
         return properties;
-    }
-
-    public void setTimeoutDetector(TimeoutDetector timeoutDetector) {
-        this.timeoutDetector = timeoutDetector;
-    }
-
-    public TimeoutDetector getTimeoutDetector() {
-        return timeoutDetector;
     }
 
 }

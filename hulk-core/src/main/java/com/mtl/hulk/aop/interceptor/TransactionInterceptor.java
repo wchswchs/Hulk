@@ -4,11 +4,13 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.BusinessActivityIdSequenceFactory;
 import com.mtl.hulk.HulkResponse;
+import com.mtl.hulk.HulkResponseFactory;
 import com.mtl.hulk.annotation.MTLDTActivityID;
 import com.mtl.hulk.annotation.MTLDTransaction;
 import com.mtl.hulk.aop.HulkAspectSupport;
 import com.mtl.hulk.bam.BusinessActivityManagerImpl;
 import com.mtl.hulk.context.*;
+import com.mtl.hulk.executor.BusinessActivityExecutor;
 import com.mtl.hulk.model.*;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -35,41 +37,19 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
 
         RuntimeContext context = RuntimeContextHolder.getContext();
 
-        String response = "";
+        HulkResponse response = null;
         boolean status = true;
+        Future<Integer> future = null;
+        Integer result = 1;
         try {
-            if (context.getActivity().getId() != null) {
-                ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(50,
-                        (new ThreadFactoryBuilder()).setNameFormat("TimeoutDetector-%d")
-                                .setDaemon(true).build());
-                ScheduledFuture timeoutFuture = scheduledExecutorService.schedule(
-                        bam.getTimeoutDetector(),
-                        RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
-
-                if (timeoutFuture.isDone()) {
-                    if ((Boolean) timeoutFuture.get()) {
-                        RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITING_FAILED);
-                        return JSONObject.toJSONString(
-                                new HulkResponse(1,
-                                        RuntimeContextHolder.getContext().getActivity().getStatus().getDesc()));
-                    }
-                }
-            }
             status = bam.start(context.getActivity().getAtomicTryActions().get(0), methodInvocation);
             if (status) {
-                RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRIED);
-                status = bam.commit();
-                if (!status) {
-                    RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITING_FAILED);
-                    status = bam.rollback();
-                    if (!status) {
-                        RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKING_FAILED);
-                    } else {
-                        RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKED);
-                    }
-                } else {
-                    RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITTED);
-                }
+                ThreadPoolExecutor executor = new ThreadPoolExecutor(50,
+                        bam.getProperties().getLogThreadPoolSize(), 5L,
+                        TimeUnit.SECONDS, new SynchronousQueue<>(),
+                        (new ThreadFactoryBuilder()).setNameFormat("Transation-Thread-%d").build());
+                future = executor.submit(new BusinessActivityExecutor(bam));
+                result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
             } else {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRYING_EXPT);
             }
@@ -83,20 +63,10 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
                 loggerExecutor.submit(loggerThread);
             }
 
-            if (!status) {
-                if (RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.COMMITING_FAILED) {
-                    response = JSONObject.toJSONString(
-                            new HulkResponse(1,
-                                    RuntimeContextHolder.getContext().getActivity().getStatus().getDesc()));
-                } else {
-                    response = JSONObject.toJSONString(
-                            new HulkResponse(2,
-                                    RuntimeContextHolder.getContext().getActivity().getStatus().getDesc()));
-                }
-            } else {
-                response = JSONObject.toJSONString(new HulkResponse(0,
-                        RuntimeContextHolder.getContext().getActivity().getStatus().getDesc()));
-            }
+            response = HulkResponseFactory.getResponse(result);
+        } catch (TimeoutException ex) {
+            RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITING_FAILED);
+            response = HulkResponseFactory.getResponse(0);
         } catch (Throwable ex) {
             logger.error("Transaction Interceptor Error", ex);
         } finally {
@@ -104,7 +74,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
             RuntimeContextHolder.clearContext();
         }
 
-        return response;
+        return JSONObject.toJSONString(response);
     }
 
     private boolean prepareContext(MethodInvocation methodInvocation) {

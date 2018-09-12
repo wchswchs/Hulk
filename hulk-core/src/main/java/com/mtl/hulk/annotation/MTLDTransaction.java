@@ -14,7 +14,7 @@ public @interface MTLDTransaction {
 
     String cancelMethod() default "";
 
-    long timeout() default 30;
+    long timeout() default 5;
 
     AtomicActionCallType callType() default AtomicActionCallType.RequestResponse;
 

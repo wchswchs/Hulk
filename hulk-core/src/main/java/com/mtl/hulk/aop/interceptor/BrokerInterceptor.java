@@ -15,6 +15,9 @@ public class BrokerInterceptor implements MethodInterceptor, Serializable {
         HulkContext subBusinessActivity = JSONObject.parseObject((String) result, HulkContext.class);
 
         RuntimeContext rc = RuntimeContextHolder.getContext();
+        if (rc == null) {
+            return "ok";
+        }
         rc.getActivity().getAtomicTryActions().addAll(subBusinessActivity.getRc().getActivity().getAtomicTryActions());
         rc.getActivity().getAtomicCommitActions().addAll(subBusinessActivity.getRc().getActivity().getAtomicCommitActions());
         rc.getActivity().getAtomicRollbackActions().addAll(subBusinessActivity.getRc().getActivity().getAtomicRollbackActions());
