@@ -47,7 +47,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
                 ThreadPoolExecutor executor = new ThreadPoolExecutor(50,
                         bam.getProperties().getLogThreadPoolSize(), 5L,
                         TimeUnit.SECONDS, new SynchronousQueue<>(),
-                        (new ThreadFactoryBuilder()).setNameFormat("Transation-Thread-%d").build());
+                        (new ThreadFactoryBuilder()).setNameFormat("Transaction-Thread-%d").build());
                 future = executor.submit(new BusinessActivityExecutor(bam));
                 result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
             } else {
