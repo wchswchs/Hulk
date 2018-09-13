@@ -36,11 +36,11 @@
 
 配置属性说明：
 
+* mtl.hulk.loggerStorage：该属性指定事务日志存储介质，默认：mysql
+
+* mtl.hulk.logMasters：该属性指定事务日志存储master，例如：mysql定义如下：
+
 ```java
-mtl.hulk.loggerStorage：该属性指定事务日志存储介质，默认：mysql
-
-mtl.hulk.logMasters：该属性指定事务日志存储master，例如：mysql定义如下：
-
 mtl.hulk.logMasters[0].initialSize=100
 
 mtl.hulk.logMasters[0].maxActive=1000
@@ -66,9 +66,11 @@ mtl.hulk.logMasters[0].validationQuery=SELECT 1
 mtl.hulk.logMasters[0].timeBetweenEvictionRunsMillis=5000
 
 mtl.hulk.logMasters[0].jdbcInterceptors=ConnectionState;StatementFinalizer
+```
 
-mtl.hulk.logSlaves：事务日志存储slave，例如：mysql定义如下：
+* mtl.hulk.logSlaves：事务日志存储slave，例如：mysql定义如下：
 
+```java
 mtl.hulk.logSlaves[0].driverClassName=com.mysql.jdbc.Driver
 
 mtl.hulk.logSlaves[0].url=jdbc:mysql://10.1.2.13:3306/tm_show
@@ -102,9 +104,9 @@ mtl.hulk.logSlaves[0].validationQuery=SELECT 1
 mtl.hulk.logSlaves[0].timeBetweenEvictionRunsMillis=5000
 
 mtl.hulk.logSlaves[0].jdbcInterceptors=ConnectionState;StatementFinalizer
-
-mtl.hulk.retryTransactionCount：该属性指定事务执行重试次数，默认：3
 ```
+
+* mtl.hulk.retryTransactionCount：该属性指定事务执行重试次数，默认：3
 
 ### 以转账场景举例
 
