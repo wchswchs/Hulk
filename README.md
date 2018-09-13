@@ -126,7 +126,7 @@ mtl.hulk.logSlaves[0].jdbcInterceptors=ConnectionState;StatementFinalizer
 #### TCC参与者
 
 TCC 参与者需要实现 3 个方法，分别是一阶段 Try 方法、二阶段 Confirm 方法以及二阶段 Cancel 方法。
-在 TCC 参与者的接口中需要先加上 @MTLDTransation 注解（需引入 com.mtl.hulk包），并定义这个 3 个方法，如
+在 TCC 参与者的接口中需要先加上 @MTLDTransation 注解（需引入 com.mtl.hulk包），并定义这3个方法，如
 下所示：
 
 ```java
