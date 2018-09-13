@@ -108,6 +108,7 @@ mtl.hulk.logSlaves[0].jdbcInterceptors=ConnectionState;StatementFinalizer
 
 * mtl.hulk.retryTransactionCount：该属性指定事务执行重试次数，默认：3
 
+
 ### 以转账场景举例
 
 #### TCC参与者
