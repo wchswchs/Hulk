@@ -131,7 +131,7 @@ class TransferMinusActionImpl implements TransferMinusAction {
 
     @Override
     public boolean cancel(BusinessActionContext businessActionContext){
-		DAO2; //扣钱回滚
+	DAO2; //扣钱回滚
     }
 
 }
@@ -153,7 +153,7 @@ class TransferAddActionImpl implements TransferAddAction {
 
     @Override
     public boolean cancel(BusinessActionContext businessActionContext){
-		DAO2; //加钱回滚
+	DAO2; //加钱回滚
     }
 
 }
@@ -226,17 +226,16 @@ public class TransferImpl implement Transfer {
     	} catch(Throwable t) {
         	throw new RuntimeException(t);
     	}
-	}
 
 	@Override
-    public boolean confirm(BusinessActionContext businessActionContext){
+    	public boolean confirm(BusinessActionContext businessActionContext){
 
-    }
+    	}
 
-    @Override
-    public boolean cancel(BusinessActionContext businessActionContext){
+    	@Override
+    	public boolean cancel(BusinessActionContext businessActionContext){
 
-    }
+    	}
 
 }
 ```
