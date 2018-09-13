@@ -3,7 +3,7 @@
 
 ## 使用指南
 
-### Example
+### Getting Started
 
 使用代码中请求serviceA，将调用serviceB和serviceC
 
