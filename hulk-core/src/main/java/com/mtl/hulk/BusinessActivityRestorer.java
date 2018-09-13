@@ -37,7 +37,7 @@ public class BusinessActivityRestorer extends AbstractHulk {
     public void run() {
 
         BusinessActivityLogger businessActivityLogger = BusinessActivityLoggerFactory.getStorage(ds, properties);
-        int retryTranactionCount = Integer.parseInt(properties.getRetryTranactionCount());
+        int retryTranactionCount = properties.getRetryTranactionCount();
         List<String> businessActivityIds = new ArrayList<>();
         try {
             List<HulkTransactionActivity> hulkTransactionActivityList = businessActivityLogger.read(properties.getRecoverySize());
@@ -72,8 +72,9 @@ public class BusinessActivityRestorer extends AbstractHulk {
     private int getRetryCount(String businessActivityIdStr) {
         if (!map.containsKey(businessActivityIdStr)) {
             synchronized (map) {
-                if (!map.containsKey(businessActivityIdStr))
+                if (!map.containsKey(businessActivityIdStr)) {
                     map.put(businessActivityIdStr, new AtomicInteger(0));
+                }
             }
         }
         return map.get(businessActivityIdStr).incrementAndGet();

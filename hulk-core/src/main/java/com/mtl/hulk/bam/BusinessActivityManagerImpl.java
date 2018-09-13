@@ -40,6 +40,7 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
                     MessageFormat.format(HulkErrorCode.TRY_FAIL.getMessage(),
                             RuntimeContextHolder.getContext().getActivity().getId().formatString(), methodInvocation.getMethod().getName())));
             logger.error("Hulk Try Exception", ex);
+            return false;
         }
         if (context.getActivity().getId() != null) {
             return true;

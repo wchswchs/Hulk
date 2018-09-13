@@ -1,8 +1,8 @@
 package com.mtl.demo.serviceA.service.impl;
 
 
-import com.mtl.hulk.annotation.MTLDTActivityID;
-import com.mtl.hulk.annotation.MTLDTransaction;
+import com.mtl.hulk.annotation.MTLDTActivity;
+import com.mtl.hulk.annotation.MTLTwoPhaseAction;
 import com.mtl.hulk.context.BusinessActivityContext;
 import com.mtl.demo.serviceA.feign.HulkClientB;
 import com.mtl.demo.serviceA.feign.HulkClientC;
@@ -22,8 +22,8 @@ public class HulkServiceAImpl implements HulkServiceA {
 
     private final static Logger logger = LoggerFactory.getLogger(HulkServiceAImpl.class);
 
-    @MTLDTransaction(confirmMethod = "confirmMysqlSaveAssetCard", cancelMethod = "cancelMysqlSaveAssetCard")
-    @MTLDTActivityID(businessDomain = "mtl", businessActivity = "test", entityId = "a")
+    @MTLTwoPhaseAction(confirmMethod = "confirmMysqlSaveAssetCard", cancelMethod = "cancelMysqlSaveAssetCard")
+    @MTLDTActivity(businessDomain = "mtl", businessActivity = "test", entityId = "a")
     @Override
     public String getHulkServiceA(int a) {
         String hulkServiceB = this.hulkClientB.getHulkServiceB(a, 2222);
@@ -36,7 +36,7 @@ public class HulkServiceAImpl implements HulkServiceA {
 
     public boolean confirmMysqlSaveAssetCard(BusinessActivityContext context) {
         logger.info("confirm A params: {}", context.getParams().get("getHulkServiceA"));
-//        Thread.sleep(1000);
+//        Thread.sleep(8000);
         return true;
     }
 

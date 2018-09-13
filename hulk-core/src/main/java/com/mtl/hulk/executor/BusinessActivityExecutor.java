@@ -18,10 +18,11 @@ public class BusinessActivityExecutor extends AbstractHulk implements Callable<I
 
     @Override
     public Integer call() {
-        RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRIED);
-        boolean status = bam.commit();
-        if (!status) {
-            RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITING_FAILED);
+        boolean status = false;
+        if (RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.TRIED) {
+            status = bam.commit();
+        }
+        if (!status || RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.COMMITING_FAILED) {
             status = bam.rollback();
             if (!status) {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKING_FAILED);

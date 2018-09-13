@@ -6,8 +6,8 @@ import com.mtl.hulk.BusinessActivityIdSequenceFactory;
 import com.mtl.hulk.HulkException;
 import com.mtl.hulk.HulkResponse;
 import com.mtl.hulk.HulkResponseFactory;
-import com.mtl.hulk.annotation.MTLDTActivityID;
-import com.mtl.hulk.annotation.MTLDTransaction;
+import com.mtl.hulk.annotation.MTLDTActivity;
+import com.mtl.hulk.annotation.MTLTwoPhaseAction;
 import com.mtl.hulk.aop.HulkAspectSupport;
 import com.mtl.hulk.bam.BusinessActivityManagerImpl;
 import com.mtl.hulk.context.*;
@@ -16,6 +16,7 @@ import com.mtl.hulk.message.HulkErrorCode;
 import com.mtl.hulk.model.*;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,11 +43,13 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
         HulkResponse response = null;
         boolean status = true;
         Future<Integer> future = null;
+        ThreadPoolExecutor executor = null;
         Integer result = 1;
         try {
             status = bam.start(methodInvocation);
             if (status) {
-                ThreadPoolExecutor executor = new ThreadPoolExecutor(50,
+                RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRIED);
+                executor = new ThreadPoolExecutor(50,
                         bam.getProperties().getLogThreadPoolSize(), 5L,
                         TimeUnit.SECONDS, new SynchronousQueue<>(),
                         (new ThreadFactoryBuilder()).setNameFormat("Transaction-Thread-%d").build());
@@ -54,6 +57,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
                 result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
             } else {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRYING_EXPT);
+                result = BooleanUtils.toInteger(status);
             }
 
             if (context.getActivity().getId() == null) {
@@ -70,7 +74,9 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
             RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITING_FAILED);
             RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_TIMEOUT.getCode(),
                                                         HulkErrorCode.COMMIT_TIMEOUT.getMessage()));
-            response = HulkResponseFactory.getResponse(0);
+            future = executor.submit(new BusinessActivityExecutor(bam));
+            result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
+            response = HulkResponseFactory.getResponse(result);
         } catch (Throwable ex) {
             logger.error("Transaction Interceptor Error", ex);
         } finally {
@@ -82,8 +88,8 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
     }
 
     private boolean prepareContext(MethodInvocation methodInvocation) {
-        MTLDTActivityID activityID = methodInvocation.getMethod().getAnnotation(MTLDTActivityID.class);
-        MTLDTransaction transaction = methodInvocation.getMethod().getAnnotation(MTLDTransaction.class);
+        MTLDTActivity activityAnnotation = methodInvocation.getMethod().getAnnotation(MTLDTActivity.class);
+        MTLTwoPhaseAction transaction = methodInvocation.getMethod().getAnnotation(MTLTwoPhaseAction.class);
 
         if (transaction == null) {
             return false;
@@ -96,13 +102,14 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
         bac.getParams().put(methodInvocation.getMethod().getName(), methodInvocation.getArguments());
         BusinessActivityContextHolder.setContext(bac);
 
-        if (activityID != null) {
+        if (activityAnnotation != null) {
             BusinessActivityId id = new BusinessActivityId();
-            id.setBusinessActivity(activityID.businessActivity());
-            id.setBusinessDomain(activityID.businessDomain());
-            id.setEntityId(activityID.entityId());
+            id.setBusinessActivity(activityAnnotation.businessActivity());
+            id.setBusinessDomain(activityAnnotation.businessDomain());
+            id.setEntityId(activityAnnotation.entityId());
             id.setSequence(String.valueOf(BusinessActivityIdSequenceFactory.getSequence(bam.getProperties().getTransIdSequence()).nextId()));
             activity.setId(id);
+            activity.setTimeout(activityAnnotation.timeout());
         }
         activity.setStatus(BusinessActivityStatus.TRYING);
 
@@ -130,8 +137,6 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
         cancelAction.setServiceOperation(cancelServiceOperation);
         cancelAction.setCallType(transaction.callType());
         activity.getAtomicRollbackActions().add(cancelAction);
-
-        activity.setTimeout(transaction.timeout());
 
         context.setActivity(activity);
         RuntimeContextHolder.setContext(context);

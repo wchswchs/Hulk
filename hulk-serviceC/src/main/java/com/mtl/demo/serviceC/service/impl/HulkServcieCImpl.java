@@ -1,7 +1,7 @@
 package com.mtl.demo.serviceC.service.impl;
 
 import com.mtl.demo.serviceC.service.HulkServiceC;
-import com.mtl.hulk.annotation.MTLDTransaction;
+import com.mtl.hulk.annotation.MTLTwoPhaseAction;
 import com.mtl.hulk.context.BusinessActivityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +12,7 @@ public class HulkServcieCImpl implements HulkServiceC {
 
     private final static Logger logger = LoggerFactory.getLogger(HulkServcieCImpl.class);
 
-    @MTLDTransaction(confirmMethod = "confirmMysqlSaveAssetCCard", cancelMethod = "cancelMysqlSaveAssetCCard")
+    @MTLTwoPhaseAction(confirmMethod = "confirmMysqlSaveAssetCCard", cancelMethod = "cancelMysqlSaveAssetCCard")
     @Override
     public String getHulkServiceC(int a) {
         return "HulkServiceCXXXXXXXXXXXXXXXXXXXXXXXs";

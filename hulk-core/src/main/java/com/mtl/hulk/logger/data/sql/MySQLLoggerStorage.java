@@ -43,13 +43,11 @@ public class MySQLLoggerStorage extends BusinessActivityLogger {
         String sql1 = "INSERT INTO tm_business_activity_log(businessActivityId,businessActivityStatus,startTime,runtimeContext,businessActivityContext) " +
                 "VALUES (?, ?, ?,?,?)";
         try (PreparedStatement ptmt = dataSource.prepareStatement(sql1)) {
-            BusinessActivityContext businessActivityContext1 = serializer.deSerialize(serializer.serialize(businessActivityContext), businessActivityContext.getClass());
-            RuntimeContext runtimeContext = serializer.deSerialize(serializer.serialize(context), context.getClass());
             ptmt.setString(1, getBusinessActivityIdStr(context.getActivity().getId()));
             ptmt.setInt(2, context.getActivity().getStatus().getCode());
             ptmt.setDate(3, new Date(context.getActivity().getStartTime().getTime()));
-            ptmt.setString(4, JSONObject.toJSONString(runtimeContext));
-            ptmt.setString(5, JSONObject.toJSONString(businessActivityContext1));
+            ptmt.setString(4, JSONObject.toJSONString(context));
+            ptmt.setString(5, JSONObject.toJSONString(businessActivityContext));
             if (ptmt.executeUpdate() > 0) {
                 return true;
             }

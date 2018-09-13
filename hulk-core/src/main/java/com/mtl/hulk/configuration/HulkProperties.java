@@ -16,13 +16,13 @@ public class HulkProperties {
     private int logThreadPoolSize = Integer.MAX_VALUE;
     private Class<?> logSerialize = KryoSerializer.class;
     private String transIdSequence = "timestamp";
-    private String retryTranactionCount = "3";
+    private int retryTranactionCount = 3;
 
-    public void setRetryTranactionCount(String retryTranactionCount) {
+    public void setRetryTranactionCount(int retryTranactionCount) {
         this.retryTranactionCount = retryTranactionCount;
     }
 
-    public String getRetryTranactionCount() {
+    public int getRetryTranactionCount() {
         return retryTranactionCount;
     }
 
