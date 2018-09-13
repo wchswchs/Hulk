@@ -87,6 +87,47 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>1.4.6.RELEASE</version>
+                <configuration>
+                    <fork>false</fork>
+                    <jvmArguments>
+                        -Xdebug
+                        -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5009
+                    </jvmArguments>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>springloaded</artifactId>
+                        <version>1.2.6.RELEASE</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <encoding>UTF8</encoding>
+                    <compilerVersion>${maven.compiler.compilerVersion}</compilerVersion>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.19.1</version>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -8,6 +8,9 @@ spring:
 eureka:
   instance:
       preferIpAddress: true
+      client:
+          serviceUrl:
+            defaultZone: ${eureka.serviceUrl.defaultZone}
 
 hystrix:
   command:

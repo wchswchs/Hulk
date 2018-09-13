@@ -36,6 +36,7 @@ public class HulkServiceAImpl implements HulkServiceA {
 
     public boolean confirmMysqlSaveAssetCard(BusinessActivityContext context) {
         logger.info("confirm A params: {}", context.getParams().get("getHulkServiceA"));
+//        Thread.sleep(1000);
         return true;
     }
 
