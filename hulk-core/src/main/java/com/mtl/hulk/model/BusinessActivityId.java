@@ -1,6 +1,8 @@
 package com.mtl.hulk.model;
 
-public class BusinessActivityId {
+import java.io.Serializable;
+
+public class BusinessActivityId implements Serializable {
 
     private String businessDomain;
     private String businessActivity;

@@ -3,6 +3,7 @@ package com.mtl.hulk.aop.interceptor;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.BusinessActivityIdSequenceFactory;
+import com.mtl.hulk.HulkException;
 import com.mtl.hulk.HulkResponse;
 import com.mtl.hulk.HulkResponseFactory;
 import com.mtl.hulk.annotation.MTLDTActivityID;
@@ -11,6 +12,7 @@ import com.mtl.hulk.aop.HulkAspectSupport;
 import com.mtl.hulk.bam.BusinessActivityManagerImpl;
 import com.mtl.hulk.context.*;
 import com.mtl.hulk.executor.BusinessActivityExecutor;
+import com.mtl.hulk.message.HulkErrorCode;
 import com.mtl.hulk.model.*;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -42,7 +44,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
         Future<Integer> future = null;
         Integer result = 1;
         try {
-            status = bam.start(context.getActivity().getAtomicTryActions().get(0), methodInvocation);
+            status = bam.start(methodInvocation);
             if (status) {
                 ThreadPoolExecutor executor = new ThreadPoolExecutor(50,
                         bam.getProperties().getLogThreadPoolSize(), 5L,
@@ -66,6 +68,8 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
             response = HulkResponseFactory.getResponse(result);
         } catch (TimeoutException ex) {
             RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITING_FAILED);
+            RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_TIMEOUT.getCode(),
+                                                        HulkErrorCode.COMMIT_TIMEOUT.getMessage()));
             response = HulkResponseFactory.getResponse(0);
         } catch (Throwable ex) {
             logger.error("Transaction Interceptor Error", ex);

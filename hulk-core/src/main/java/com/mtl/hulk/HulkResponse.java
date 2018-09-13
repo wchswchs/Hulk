@@ -2,20 +2,27 @@ package com.mtl.hulk;
 
 public class HulkResponse {
 
-    private int code;
+    private int status;
     private String message;
+    private HulkException exception;
 
-    public HulkResponse(int code, String message) {
-        this.code = code;
+
+    public HulkResponse(int status, String message, HulkException ex) {
+        this.status = status;
         this.message = message;
+        this.exception = ex;
     }
 
-    public int getCode() {
-        return code;
+    public int getStatus() {
+        return status;
     }
 
     public String getMessage() {
         return message;
+    }
+
+    public HulkException getException() {
+        return exception;
     }
 
 }
