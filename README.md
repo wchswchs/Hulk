@@ -77,11 +77,11 @@ mtl.hulk.logMasters[0].jdbcInterceptors=ConnectionState;StatementFinalizer
 ```java
 mtl.hulk.logSlaves[0].driverClassName=com.mysql.jdbc.Driver
 
-mtl.hulk.logSlaves[0].url=jdbc:mysql://10.1.2.13:3306/tm_show
+mtl.hulk.logSlaves[0].url=jdbc:mysql://localhost:3306/test
 
-mtl.hulk.logSlaves[0].username=dev_niumowang
+mtl.hulk.logSlaves[0].username=test
 
-mtl.hulk.logSlaves[0].password=1QAZ2wsx
+mtl.hulk.logSlaves[0].password=test
 
 mtl.hulk.logSlaves[0].initialSize=100
 
