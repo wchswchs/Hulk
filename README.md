@@ -45,6 +45,14 @@
 * mtl.hulk.logMasters：该属性指定事务日志存储master，例如：mysql定义如下：
 
 ```java
+mtl.hulk.logMasters[0].driverClassName=com.mysql.jdbc.Driver
+
+mtl.hulk.logMasters[0].url=jdbc:mysql://localhost:3306/test
+
+mtl.hulk.logMasters[0].username=test
+
+mtl.hulk.logMasters[0].password=test
+
 mtl.hulk.logMasters[0].initialSize=100
 
 mtl.hulk.logMasters[0].maxActive=1000
