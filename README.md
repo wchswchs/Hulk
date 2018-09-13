@@ -1,7 +1,11 @@
 # hulk
-高性能分布式事务框架(TCC模式)
+高性能分布式事务框架(TCC模式，基于Spring Cloud)
 
 ## 使用指南
+
+### Example
+
+使用代码中请求serviceA，将调用serviceB和serviceC
 
 ### 依赖与配置项
 #### 工程依赖
