@@ -249,7 +249,7 @@ public class TransferImpl implement Transfer {
 注解属性说明：
 
 ```java
-businessDomain：必选项。该属性指定业务类型，由用户根据自己业务场景自定义，例如：风火轮定义为fhl
+businessDomain：必选项。该属性指定业务类型，由用户根据自己业务场景自定义
 businessActivity：必选项。该属性指定事务名，由用户根据自己业务场景自定义，例如：转账定义为transfer
 timeout：该属性指定事务超时时间，默认为 5 秒，用户可以根据自身需要自定义，单位为秒。
 ```
