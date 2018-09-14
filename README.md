@@ -191,6 +191,7 @@ Cancel：有且仅有一个参数，参数类型必须是 com.mtl.hulk.context.B
 返回类型说明
 Try、Confirm 和 Cancel 这 3 个方法的返回类型必须为 boolean 类型。
 ```
+  注意：同一个事务发起方try方法名不能重复。
 
 ##### TCC 参与者实现规范
 
@@ -208,8 +209,6 @@ Try、Confirm 和 Cancel 这 3 个方法的返回类型必须为 boolean 类型�
 为需要开启分布式事务的接口增加分布式事务注解
 
 @MTLDTActivity(businessDomain = "mtl", businessActivity = "transfer")，表明此方法内部需要开启分布式事务。
-
-注意：超时会自动触发当前事务回滚。
 
 方法内部可以执行下列事务操作（无数量与先后顺序的限制）：
 * 操作本地 DAO 操作。
