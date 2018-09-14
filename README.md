@@ -181,7 +181,7 @@ comfirmMethod：指定二阶段 Confirm 方法的名称，可自定义。
 cancelMethod：指定二阶段 Cancel 方法的名称，可自定义。
 ```
 
-TCC 方法参数说明：
+##### TCC 方法参数说明：
 
 ```java
 Try(上例中的prepareMinus)：第一个参数类型必须是 com.mtl.hulk.context.BusinessActivityContext，后续参数的个数和类型可以自定义。
@@ -192,7 +192,7 @@ Cancel：有且仅有一个参数，参数类型必须是 com.mtl.hulk.context.B
 Try、Confirm 和 Cancel 这 3 个方法的返回类型必须为 boolean 类型。
 ```
 
-TCC 参与者实现规范
+##### TCC 参与者实现规范
 
 实现两阶段接口：二阶段入参只包含事务数据，参与者处理业务数据之前需要根据事务数据关联到具体的业务数据。
 
@@ -207,7 +207,9 @@ TCC 参与者实现规范
 
 为需要开启分布式事务的接口增加分布式事务注解
 
-@MTLDTActivityID(businessDomain = "mtl", businessActivity = "transfer")，表明此方法内部需要开启分布式事务。
+@MTLDTActivity(businessDomain = "mtl", businessActivity = "transfer")，表明此方法内部需要开启分布式事务。
+
+注意：超时会自动触发当前事务回滚。
 
 方法内部可以执行下列事务操作（无数量与先后顺序的限制）：
 * 操作本地 DAO 操作。
