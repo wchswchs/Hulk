@@ -1,4 +1,4 @@
-# hulk
+# Hulk
 高性能分布式事务框架(TCC模式，基于Spring Cloud)
 
 ## 特性
