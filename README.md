@@ -203,7 +203,7 @@ TCC 参与者实现规范
 
 #### TCC发起方
 
-开启分布式事务
+##### 开启分布式事务
 
 为需要开启分布式事务的接口增加分布式事务注解
 
@@ -268,3 +268,20 @@ timeout：该属性指定事务超时时间，默认为 5 秒，用户可以根�
 
 注意：超时会自动触发当前事务回滚。
 
+##### FeignClient接口
+
+为收集远程调用接口的返回上下文增加Broker注解
+
+@MTLDTBroker
+示例如下：
+
+```java
+@FeignClient("transferAddAction")
+public interface TransferAddActionClient {
+
+    @MTLDTBroker
+    @RequestMapping("/transfer/add")
+    String transferAdd(@RequestParam("accountNo") String accountNo, @RequestParam("amount") double amount);
+
+}
+```
