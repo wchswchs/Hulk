@@ -126,7 +126,6 @@ mtl.hulk.logSlaves[0].timeBetweenEvictionRunsMillis=5000
 
 mtl.hulk.logSlaves[0].jdbcInterceptors=ConnectionState;StatementFinalizer
 ```
-
 * mtl.hulk.retryTransactionCount：该属性指定事务执行重试次数，默认：3
 
 
@@ -280,7 +279,7 @@ timeout：该属性指定事务超时时间，默认为 5 秒，用户可以根�
 
 ##### FeignClient接口
 
-为收集远程调用接口的返回上下文增加Broker注解
+为收集远程调用接口返回的上下文增加Broker注解
 
 @MTLDTBroker
 示例如下：
