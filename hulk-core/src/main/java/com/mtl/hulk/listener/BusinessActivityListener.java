@@ -33,7 +33,6 @@ public class BusinessActivityListener extends HulkListener {
         for (int i = 0; i < context.getActivity().getAtomicTryActions().size(); i ++) {
             AtomicActionListener listener = new AtomicActionListener(currentActions.get(i), dataSource, applicationContext, context.getActivity().getAtomicTryActions().get(i));
             listener.setBam(bam);
-            listener.setLoggerExecutor(bam.getLoggerExecutor());
             listener.setApplicationContext(bam.getApplicationContext());
             boolean status = listener.process();
             if (status == false) {

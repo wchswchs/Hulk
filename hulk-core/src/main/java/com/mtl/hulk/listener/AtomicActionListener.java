@@ -1,5 +1,6 @@
 package com.mtl.hulk.listener;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.HulkDataSource;
 import com.mtl.hulk.HulkException;
 import com.mtl.hulk.HulkListener;
@@ -16,6 +17,9 @@ import org.springframework.context.ApplicationContext;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class AtomicActionListener extends HulkListener {
 
@@ -33,6 +37,10 @@ public class AtomicActionListener extends HulkListener {
         if (action.getServiceOperation().getType() == ServiceOperationType.TCC) {
             BusinessActivityContext bac = BusinessActivityContextHolder.getContext();
             RuntimeContext context = RuntimeContextHolder.getContext();
+            ThreadPoolExecutor loggerExecutor = new ThreadPoolExecutor(50,
+                    bam.getProperties().getLogThreadPoolSize(), 5L,
+                    TimeUnit.SECONDS, new SynchronousQueue<>(),
+                    (new ThreadFactoryBuilder()).setNameFormat("logger-thread-%d").build());
             try {
                 Object object = applicationContext.getBean(tryAction.getServiceOperation().getBeanClass());
                 Method method = object.getClass().getMethod(action.getServiceOperation().getName(), BusinessActivityContext.class);

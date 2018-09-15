@@ -45,6 +45,10 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
         Future<Integer> future = null;
         ThreadPoolExecutor executor = null;
         Integer result = 1;
+        ThreadPoolExecutor loggerExecutor = new ThreadPoolExecutor(50,
+                bam.getProperties().getLogThreadPoolSize(), 5L,
+                TimeUnit.SECONDS, new SynchronousQueue<>(),
+                (new ThreadFactoryBuilder()).setNameFormat("logger-thread-%d").build());
         try {
             status = bam.start(methodInvocation);
             if (status) {
@@ -82,6 +86,11 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
         } finally {
             BusinessActivityContextHolder.clearContext();
             RuntimeContextHolder.clearContext();
+            if (context.getActivity().getId() != null) {
+                future.cancel(false);
+                executor.shutdown();
+            }
+            loggerExecutor.shutdown();
         }
 
         return JSONObject.toJSONString(response);

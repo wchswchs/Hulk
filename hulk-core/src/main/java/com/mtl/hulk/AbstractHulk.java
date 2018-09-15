@@ -7,8 +7,6 @@ import com.mtl.hulk.logger.BusinessActivityLoggerExceptionThread;
 import com.mtl.hulk.logger.BusinessActivityLoggerThread;
 import org.springframework.context.ApplicationContext;
 
-import java.util.concurrent.ThreadPoolExecutor;
-
 public abstract class AbstractHulk {
 
     protected HulkDataSource dataSource;
@@ -16,7 +14,6 @@ public abstract class AbstractHulk {
     protected RuntimeContext context;
     protected BusinessActivityContext businessActivityContext;
     protected ApplicationContext applicationContext;
-    protected ThreadPoolExecutor loggerExecutor;
     protected BusinessActivityLoggerThread loggerThread;
     protected BusinessActivityLoggerExceptionThread loggerExceptionThread;
 
@@ -83,14 +80,6 @@ public abstract class AbstractHulk {
 
     public HulkDataSource getDataSource() {
         return dataSource;
-    }
-
-    public void setLoggerExecutor(ThreadPoolExecutor loggerExecutor) {
-        this.loggerExecutor = loggerExecutor;
-    }
-
-    public ThreadPoolExecutor getLoggerExecutor() {
-        return loggerExecutor;
     }
 
     public void setLoggerThread(BusinessActivityLoggerThread loggerThread) {

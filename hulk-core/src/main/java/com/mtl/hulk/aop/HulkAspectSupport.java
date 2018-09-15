@@ -11,10 +11,6 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
 public abstract class HulkAspectSupport extends AbstractHulk implements BeanFactoryAware, InitializingBean, SmartInitializingSingleton {
 
     private BeanFactory beanFactory;
@@ -36,14 +32,9 @@ public abstract class HulkAspectSupport extends AbstractHulk implements BeanFact
 
     @Override
     public void afterSingletonsInstantiated() {
-        this.loggerExecutor = new ThreadPoolExecutor(50,
-                bam.getProperties().getLogThreadPoolSize(), 5L,
-                TimeUnit.SECONDS, new SynchronousQueue<>(),
-                (new ThreadFactoryBuilder()).setNameFormat("logger-thread-%d").build());
         this.loggerThread = new BusinessActivityLoggerThread(
                 bam.getProperties(), bam.getListener().getDataSource());
         this.loggerExceptionThread = new BusinessActivityLoggerExceptionThread(bam.getProperties(), bam.getListener().getDataSource());
-        bam.setLoggerExecutor(loggerExecutor);
         bam.setLoggerThread(loggerThread);
         bam.setLoggerExceptionThread(loggerExceptionThread);
     }
