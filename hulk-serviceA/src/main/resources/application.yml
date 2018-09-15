@@ -4,7 +4,7 @@ spring:
   aop:
     proxyTargetClass: true
   application:
-    name: hulkService
+    name: hulkServiceA
 eureka:
   instance:
       preferIpAddress: true

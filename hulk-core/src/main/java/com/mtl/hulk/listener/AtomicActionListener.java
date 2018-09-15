@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
 
@@ -35,8 +36,29 @@ public class AtomicActionListener extends HulkListener {
             try {
                 Object object = applicationContext.getBean(tryAction.getServiceOperation().getBeanClass());
                 Method method = object.getClass().getMethod(action.getServiceOperation().getName(), BusinessActivityContext.class);
-                boolean response = (boolean) method.invoke(object, bac);
-                if (response == false) {
+                if (method == null) {
+                    return false;
+                }
+                Object ret = method.invoke(object, bac);
+                if (ret == null) {
+                    return false;
+                }
+                if (((boolean) ret) == false) {
+                    if (RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.COMMITTING) {
+                        RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_FAIL.getCode(),
+                                MessageFormat.format(HulkErrorCode.COMMIT_FAIL.getMessage(),
+                                        RuntimeContextHolder.getContext().getActivity().getId().formatString(),
+                                        action.getServiceOperation().getName())));
+                    } else {
+                        RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.ROLLBACK_FAIL.getCode(),
+                                MessageFormat.format(HulkErrorCode.ROLLBACK_FAIL.getMessage(),
+                                        RuntimeContextHolder.getContext ().getActivity().getId().formatString(),
+                                        action.getServiceOperation().getName())));
+                    }
+                    return false;
+                }
+            } catch (InvocationTargetException ex) {
+                if (RuntimeContextHolder.getContext().getException().getCode() != HulkErrorCode.COMMIT_TIMEOUT.getCode()) {
                     if (RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.COMMITTING) {
                         RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_FAIL.getCode(),
                                 MessageFormat.format(HulkErrorCode.COMMIT_FAIL.getMessage(),
@@ -48,8 +70,13 @@ public class AtomicActionListener extends HulkListener {
                                         RuntimeContextHolder.getContext().getActivity().getId().formatString(),
                                         action.getServiceOperation().getName())));
                     }
-                    return false;
                 }
+                BusinessActivityException bax = new BusinessActivityException();
+                bax.setId(context.getActivity().getId());
+                bax.setException(ex.getMessage());
+                loggerExceptionThread.setEx(bax);
+                loggerExecutor.submit(loggerExceptionThread);
+                return false;
             } catch (Throwable ex) {
                 logger.error("Hulk Commit/Rollback Exception", ex);
                 if (RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.COMMITTING) {
