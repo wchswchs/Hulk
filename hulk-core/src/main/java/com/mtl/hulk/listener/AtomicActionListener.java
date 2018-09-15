@@ -66,6 +66,7 @@ public class AtomicActionListener extends HulkListener {
                     return false;
                 }
             } catch (InvocationTargetException ex) {
+                logger.error("Hulk Commit/Rollback Exception", ex);
                 if (RuntimeContextHolder.getContext().getException().getCode() != HulkErrorCode.COMMIT_TIMEOUT.getCode()) {
                     if (RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.COMMITTING) {
                         RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_FAIL.getCode(),

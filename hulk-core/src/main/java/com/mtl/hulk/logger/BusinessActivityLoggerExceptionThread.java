@@ -23,16 +23,17 @@ public class BusinessActivityLoggerExceptionThread extends AbstractHulk implemen
 
     @Override
     public void run() {
+        logger.info("Writing Exception log.");
         BusinessActivityLogger bal = BusinessActivityLoggerFactory.getStorage(dataSource, properties);
-        if(null == bal){
+        if(null == bal) {
             logger.warn("businessActivityLogger获取为空，storage={}", properties.getLoggerStorage());
             return;
         }
         try {
             bal.writeEx(ex);
+            logger.info("Written Exception log.");
         } catch (SQLException e) {
             logger.error("Hulk Log WriteEx Exception", e);
-        } finally {
         }
     }
 
