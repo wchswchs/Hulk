@@ -296,3 +296,5 @@ public interface TransferAddActionClient {
 ## 未来规划
 * 实现事务隔离
 * 防悬挂
+* 分布式事务日志恢复
+* 事务执行监控
