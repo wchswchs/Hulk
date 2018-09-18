@@ -45,7 +45,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
         Future<Integer> future = null;
         ThreadPoolExecutor executor = null;
         Integer result = 1;
-        ThreadPoolExecutor loggerExecutor = new ThreadPoolExecutor(50,
+        ThreadPoolExecutor loggerExecutor = new ThreadPoolExecutor(800,
                 bam.getProperties().getLogThreadPoolSize(), 5L,
                 TimeUnit.SECONDS, new SynchronousQueue<>(),
                 (new ThreadFactoryBuilder()).setNameFormat("logger-thread-%d").build());
@@ -53,7 +53,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
             status = bam.start(methodInvocation);
             if (status) {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRIED);
-                executor = new ThreadPoolExecutor(50,
+                executor = new ThreadPoolExecutor(800,
                         bam.getProperties().getLogThreadPoolSize(), 5L,
                         TimeUnit.SECONDS, new SynchronousQueue<>(),
                         (new ThreadFactoryBuilder()).setNameFormat("Transaction-Thread-%d").build());
@@ -76,19 +76,25 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
             response = HulkResponseFactory.getResponse(result);
         } catch (TimeoutException ex) {
             RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_TIMEOUT.getCode(),
-                                                        HulkErrorCode.COMMIT_TIMEOUT.getMessage()));
+                    HulkErrorCode.COMMIT_TIMEOUT.getMessage()));
             future.cancel(true);
             future = executor.submit(new BusinessActivityExecutor(bam));
             result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
             response = HulkResponseFactory.getResponse(result);
-        } catch (Throwable ex) {
+        } catch (NullPointerException ex) {
+            logger.error("Transaction Interceptor Error", ex);
+        } catch (Exception ex) {
             logger.error("Transaction Interceptor Error", ex);
         } finally {
             BusinessActivityContextHolder.clearContext();
             RuntimeContextHolder.clearContext();
             if (context.getActivity().getId() != null) {
-                future.cancel(false);
-                executor.shutdown();
+                if (future != null) {
+                    future.cancel(false);
+                }
+                if (executor != null) {
+                    executor.shutdown();
+                }
             }
             loggerExecutor.shutdown();
         }
