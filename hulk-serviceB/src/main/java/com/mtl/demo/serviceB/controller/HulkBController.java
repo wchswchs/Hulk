@@ -13,7 +13,7 @@ public class HulkBController {
     private HulkServiceB hulkServiceB;
 
     @RequestMapping("/hulkServiceB")
-    public String getHulkServiceB(@RequestParam("a") int a, @RequestParam("b") int b) {
+    public String getHulkServiceB(@RequestParam("a") int a, @RequestParam("b") int b) throws InterruptedException {
         return hulkServiceB.getHulkServiceB(a, b);
     }
 }

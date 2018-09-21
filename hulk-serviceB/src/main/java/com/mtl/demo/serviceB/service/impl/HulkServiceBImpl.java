@@ -14,7 +14,8 @@ public class HulkServiceBImpl implements HulkServiceB {
 
     @MTLTwoPhaseAction(confirmMethod = "confirmMysqlSaveAssetBCard", cancelMethod = "cancelMysqlSaveAssetBCard")
     @Override
-    public String getHulkServiceB(int a, int b) {
+    public String getHulkServiceB(int a, int b) throws InterruptedException {
+//        Thread.sleep(3000);
         return "HulkServiceB/////////////";
     }
     public boolean confirmMysqlSaveAssetBCard(BusinessActivityContext context) {

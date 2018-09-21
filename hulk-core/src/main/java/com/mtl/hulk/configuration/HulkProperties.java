@@ -78,4 +78,8 @@ public class HulkProperties {
         return transIdSequence;
     }
 
+    public void setTransIdSequence(String transIdSequence) {
+        this.transIdSequence = transIdSequence;
+    }
+
 }

@@ -2,10 +2,13 @@ package com.mtl.hulk;
 
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.BusinessActivityContext;
+import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.context.RuntimeContext;
 import com.mtl.hulk.logger.BusinessActivityLoggerExceptionThread;
 import com.mtl.hulk.logger.BusinessActivityLoggerThread;
 import org.springframework.context.ApplicationContext;
+
+import java.util.concurrent.CompletableFuture;
 
 public abstract class AbstractHulk {
 
@@ -16,6 +19,7 @@ public abstract class AbstractHulk {
     protected ApplicationContext applicationContext;
     protected BusinessActivityLoggerThread loggerThread;
     protected BusinessActivityLoggerExceptionThread loggerExceptionThread;
+    protected volatile CompletableFuture<HulkContext> future;
 
     public AbstractHulk(HulkDataSource dataSource, HulkProperties properties, RuntimeContext context, ApplicationContext applicationContext) {
         this.dataSource = dataSource;
@@ -92,6 +96,14 @@ public abstract class AbstractHulk {
 
     public void setContext(RuntimeContext context) {
         this.context = context;
+    }
+
+    public void setFuture(CompletableFuture<HulkContext> future) {
+        this.future = future;
+    }
+
+    public CompletableFuture<HulkContext> getFuture() {
+        return future;
     }
 
 }

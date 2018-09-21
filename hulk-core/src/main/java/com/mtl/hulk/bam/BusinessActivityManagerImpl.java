@@ -1,8 +1,10 @@
 package com.mtl.hulk.bam;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.AbstractHulk;
 import com.mtl.hulk.HulkException;
-import com.mtl.hulk.context.RuntimeContext;
+import com.mtl.hulk.context.BusinessActivityContextHolder;
+import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.listener.BusinessActivityListener;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.message.HulkErrorCode;
@@ -16,6 +18,10 @@ import org.springframework.context.ApplicationContext;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("all")
 public class BusinessActivityManagerImpl extends AbstractHulk implements BusinessActivityManager, UserBusinessActivity {
@@ -32,7 +38,15 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
     @Override
     public boolean start(MethodInvocation methodInvocation) {
         listener.setBam(this);
-        RuntimeContext context = RuntimeContextHolder.getContext();
+        ThreadPoolExecutor tryExecutor = new ThreadPoolExecutor(800,
+                getProperties().getLogThreadPoolSize(), 5L,
+                TimeUnit.SECONDS, new SynchronousQueue<>(),
+                (new ThreadFactoryBuilder()).setNameFormat("try-thread-%d").build());
+        setFuture(CompletableFuture.supplyAsync(() -> {
+            return new HulkContext(
+                    BusinessActivityContextHolder.getContext(),
+                    RuntimeContextHolder.getContext());
+        }, tryExecutor));
         try {
             Object result = methodInvocation.proceed();
         } catch (Throwable ex) {
@@ -42,7 +56,8 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
             logger.error("Hulk Try Exception", ex);
             return false;
         }
-        if (context.getActivity().getId() != null) {
+        if (RuntimeContextHolder.getContext().getActivity().getId() != null) {
+            getFuture().join();
             return true;
         }
         return false;

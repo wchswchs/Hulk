@@ -11,7 +11,6 @@ import com.mtl.hulk.listener.BusinessActivityListener;
 import com.mtl.hulk.logger.data.sql.SQLDataSource;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -24,12 +23,18 @@ import java.util.List;
 @EnableConfigurationProperties(HulkProperties.class)
 public class HulkConfiguration {
 
-    @Autowired
-    private HulkProperties properties;
-    @Autowired
-    private HulkDataSource hulkDataSource;
-    @Autowired
-    private ApplicationContext applicationContext;
+    private final HulkProperties properties;
+    private final ApplicationContext applicationContext;
+
+    public HulkConfiguration(HulkProperties properties, ApplicationContext applicationContext) {
+        this.properties = properties;
+        this.applicationContext = applicationContext;
+    }
+
+    @Bean
+    public BusinessActivityManagerImpl bam() {
+        return new BusinessActivityManagerImpl(properties, listener(), applicationContext);
+    }
 
     @Bean
     public BeanFactoryHulkAdvisor hulkTransactionAdvisor() {
@@ -52,17 +57,12 @@ public class HulkConfiguration {
 
     @Bean
     public BrokerInterceptor hulkBrokerInterceptor() {
-        return new BrokerInterceptor();
-    }
-
-    @Bean
-    public BusinessActivityManagerImpl bam() {
-        return new BusinessActivityManagerImpl(properties, listener(), applicationContext);
+        return new BrokerInterceptor(bam());
     }
 
     @Bean
     public BusinessActivityListener listener() {
-        return new BusinessActivityListener(hulkDataSource);
+        return new BusinessActivityListener(hulkDataSource());
     }
 
     @Bean

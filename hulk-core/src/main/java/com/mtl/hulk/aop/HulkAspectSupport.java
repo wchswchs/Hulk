@@ -1,6 +1,5 @@
 package com.mtl.hulk.aop;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.AbstractHulk;
 import com.mtl.hulk.bam.BusinessActivityManagerImpl;
 import com.mtl.hulk.logger.BusinessActivityLoggerExceptionThread;
@@ -14,7 +13,7 @@ import org.springframework.beans.factory.SmartInitializingSingleton;
 public abstract class HulkAspectSupport extends AbstractHulk implements BeanFactoryAware, InitializingBean, SmartInitializingSingleton {
 
     private BeanFactory beanFactory;
-    protected final BusinessActivityManagerImpl bam;
+    protected BusinessActivityManagerImpl bam;
 
     public HulkAspectSupport(BusinessActivityManagerImpl bam) {
         super();
