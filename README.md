@@ -143,7 +143,7 @@ class TransferMinusActionImpl implements TransferMinusAction {
 
     @Override
     @MTLTwoPhaseAction(confirmMethod = "confirm", cancelMethod = "cancel")
-    public boolean prepareMinus(BusinessActivityContext businessActivityContext, String accountNo, double amount) {
+    public String prepareMinus(BusinessActivityContext businessActivityContext, String accountNo, double amount) {
 
     }
 
@@ -165,7 +165,7 @@ class TransferAddActionImpl implements TransferAddAction {
 
     @Override
     @MTLTwoPhaseAction(confirmMethod = "confirm", cancelMethod = "cancel")
-    public boolean prepareAdd(BusinessActivityContext businessActivityContext, String accountNo, double amount) {
+    public String prepareAdd(BusinessActivityContext businessActivityContext, String accountNo, double amount) {
 
     }
 
@@ -197,7 +197,8 @@ Confirm：有且仅有一个参数，参数类型必须是 com.mtl.hulk.context.
 Cancel：有且仅有一个参数，参数类型必须是 com.mtl.hulk.context.BusinessActivityContext，后续为相应的参数名。
 
 返回类型说明
-Try、Confirm 和 Cancel 这 3 个方法的返回类型必须为 boolean 类型。
+Try方法的返回类型必须为 String 类型
+Confirm 和 Cancel 这 2 个方法的返回类型必须为 boolean 类型。
 ```
   注意：同一个事务发起方try方法名不能重复。
 
@@ -232,19 +233,19 @@ public class TransferImpl implement Transfer {
 
 	@MTLDTActivity(businessDomain = "mtl", businessActivity = "transfer")
 	@MTLTwoPhaseAction(confirmMethod = "confirm", cancelMethod = "cancel")
-	public boolean transferByTcc(String from, String to, double amount) {
+	public String transferByTcc(String from, String to, double amount) {
 		try{
 			//第一个参与者
-			boolean ret = firstTccActionRef.prepareMinus(null, from, amount);
-			if(!ret){
-			//事务回滚
-			return false;
+			String ret = firstTccActionRef.prepareMinus(null, from, amount);
+			if(ret.isEmpty()){
+				//事务回滚
+				return false;
 			}
 			//第二个参与者
 			ret = secondTccActionRef.prepareAdd(null, to, amount);
-			if(!ret) {
-			//事务回滚
-			return false;
+			if(ret.isEmpty()) {
+				//事务回滚
+				return false;
 			}
 			return ret;
 		} catch(Throwable t) {
@@ -296,6 +297,5 @@ public interface TransferAddActionClient {
 ```
 ## 未来规划
 * 实现事务隔离
-* 防悬挂
 * 分布式事务日志恢复
 * 事务执行监控
