@@ -1,7 +1,6 @@
 package com.mtl.hulk.aop.interceptor;
 
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.BusinessActivityIdSequenceFactory;
 import com.mtl.hulk.HulkException;
 import com.mtl.hulk.HulkResponse;
@@ -43,21 +42,13 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
         HulkResponse response = null;
         boolean status = true;
         Future<Integer> future = null;
-        ThreadPoolExecutor executor = null;
+        ExecutorService executor = bam.getTransactionExecutor();
         Integer result = 1;
-        ThreadPoolExecutor loggerExecutor = new ThreadPoolExecutor(800,
-                bam.getProperties().getLogThreadPoolSize(), 5L,
-                TimeUnit.SECONDS, new SynchronousQueue<>(),
-                (new ThreadFactoryBuilder()).setNameFormat("logger-thread-%d").build());
+        ExecutorService loggerExecutor = bam.getLogExecutor();
         try {
             status = bam.start(methodInvocation);
             if (status) {
-                RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRIED);
-                executor = new ThreadPoolExecutor(800,
-                        bam.getProperties().getLogThreadPoolSize(), 5L,
-                        TimeUnit.SECONDS, new SynchronousQueue<>(),
-                        (new ThreadFactoryBuilder()).setNameFormat("Transaction-Thread-%d").build());
-                future = executor.submit(new BusinessActivityExecutor(bam));
+                future = executor.submit(new BusinessActivityExecutor(bam, true));
                 result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
             } else {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRYING_EXPT);
@@ -78,7 +69,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
             RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_TIMEOUT.getCode(),
                     HulkErrorCode.COMMIT_TIMEOUT.getMessage()));
             future.cancel(true);
-            future = executor.submit(new BusinessActivityExecutor(bam));
+            future = executor.submit(new BusinessActivityExecutor(bam, false));
             result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
             response = HulkResponseFactory.getResponse(result);
         } catch (NullPointerException ex) {
@@ -92,13 +83,8 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
                 if (future != null) {
                     future.cancel(false);
                 }
-                if (executor != null) {
-                    executor.shutdown();
-                }
             }
-            loggerExecutor.shutdown();
         }
-
         return JSONObject.toJSONString(response);
     }
 

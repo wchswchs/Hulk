@@ -20,7 +20,7 @@ public class HulkServiceBImpl implements HulkServiceB {
     }
     public boolean confirmMysqlSaveAssetBCard(BusinessActivityContext context) {
         logger.info("confirm B params: {} {}", context.getParams().get("getHulkServiceB"));
-        return true;
+        return false;
     }
 
     public boolean cancelMysqlSaveAssetBCard(BusinessActivityContext context) {

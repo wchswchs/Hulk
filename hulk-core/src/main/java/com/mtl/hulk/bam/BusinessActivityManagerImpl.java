@@ -1,8 +1,8 @@
 package com.mtl.hulk.bam;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.AbstractHulk;
 import com.mtl.hulk.HulkException;
+import com.mtl.hulk.aop.interceptor.BrokerInterceptor;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
 import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.listener.BusinessActivityListener;
@@ -18,10 +18,7 @@ import org.springframework.context.ApplicationContext;
 
 import java.text.MessageFormat;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @SuppressWarnings("all")
 public class BusinessActivityManagerImpl extends AbstractHulk implements BusinessActivityManager, UserBusinessActivity {
@@ -38,29 +35,47 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
     @Override
     public boolean start(MethodInvocation methodInvocation) {
         listener.setBam(this);
-        ThreadPoolExecutor tryExecutor = new ThreadPoolExecutor(800,
-                getProperties().getLogThreadPoolSize(), 5L,
-                TimeUnit.SECONDS, new SynchronousQueue<>(),
-                (new ThreadFactoryBuilder()).setNameFormat("try-thread-%d").build());
-        setFuture(CompletableFuture.supplyAsync(() -> {
-            return new HulkContext(
-                    BusinessActivityContextHolder.getContext(),
-                    RuntimeContextHolder.getContext());
-        }, tryExecutor));
+        ExecutorService tryExecutor = getTryExecutor();
+        setFuture(CompletableFuture.completedFuture(
+                new ConcurrentHashMap<Integer, HulkContext>()));
+        boolean status = false;
         try {
+            BrokerInterceptor.setOrders(new CopyOnWriteArrayList<>());
             Object result = methodInvocation.proceed();
+            if (RuntimeContextHolder.getContext().getActivity().getId() != null) {
+                Map<Integer, HulkContext> hc = getFuture().join();
+                if (hc != null && hc.size() > 0
+                        && BrokerInterceptor.getOrders() != null
+                        && BrokerInterceptor.getOrders().size() > 0) {
+                    for (int i = 0; i < BrokerInterceptor.getOrders().size(); i++) {
+                        if (hc.get(i) != null) {
+                            RuntimeContextHolder.getContext().getActivity().getAtomicTryActions()
+                                    .addAll(hc.get(i).getRc().getActivity().getAtomicTryActions());
+                            RuntimeContextHolder.getContext().getActivity().getAtomicCommitActions()
+                                    .addAll(hc.get(i).getRc().getActivity().getAtomicCommitActions());
+                            RuntimeContextHolder.getContext().getActivity().getAtomicRollbackActions()
+                                    .addAll(hc.get(i).getRc().getActivity().getAtomicRollbackActions());
+                            BusinessActivityContextHolder.getContext().getParams().putAll(hc.get(i)
+                                    .getBac().getParams());
+                        }
+                    }
+                }
+                status = true;
+            }
         } catch (Throwable ex) {
             RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.TRY_FAIL.getCode(),
                     MessageFormat.format(HulkErrorCode.TRY_FAIL.getMessage(),
                             RuntimeContextHolder.getContext().getActivity().getId().formatString(), methodInvocation.getMethod().getName())));
             logger.error("Hulk Try Exception", ex);
-            return false;
+        } finally {
+            if (getFuture() != null) {
+                if (getFuture().isCompletedExceptionally() ||
+                        getFuture().isDone()) {
+                    getFuture().cancel(false);
+                }
+            }
         }
-        if (RuntimeContextHolder.getContext().getActivity().getId() != null) {
-            getFuture().join();
-            return true;
-        }
-        return false;
+        return status;
     }
 
     @Override

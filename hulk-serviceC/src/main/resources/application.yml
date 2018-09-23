@@ -1,5 +1,3 @@
-server:
-  port: 8001
 spring:
   aop:
     proxyTargetClass: true
@@ -7,10 +5,10 @@ spring:
     name: hulkServiceC
 eureka:
   instance:
-      preferIpAddress: true
-      client:
-          serviceUrl:
-            defaultZone: ${eureka.serviceUrl.defaultZone}
+    preferIpAddress: true
+  client:
+    serviceUrl:
+      defaultZone: ${eureka.serviceUrl.defaultZone}
 
 hystrix:
   command:
@@ -19,3 +17,6 @@ hystrix:
         isolation:
           thread:
             timeoutInMilliseconds: 15000
+
+logging:
+  config: /apps/config/logconfig/hulk-logback.xml

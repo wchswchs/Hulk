@@ -10,10 +10,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class BrokerInterceptor extends HulkAspectSupport implements MethodInterceptor, Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(BrokerInterceptor.class);
+
+    private static List<String> orders;
 
     public BrokerInterceptor(BusinessActivityManagerImpl bam) {
         super(bam);
@@ -21,24 +24,31 @@ public class BrokerInterceptor extends HulkAspectSupport implements MethodInterc
 
     @Override
     public Object invoke(MethodInvocation methodInvocation) throws Throwable {
-        bam.setFuture(bam.getFuture().thenApplyAsync(hc -> {
+        if (!orders.contains(methodInvocation.getMethod().getName())) {
+            orders.add(methodInvocation.getMethod().getName());
+        }
+        bam.setFuture(bam.getFuture().thenApplyAsync(am -> {
             try {
+                String name = methodInvocation.getMethod().getName();
+                logger.info("Try request sending: {}", name);
                 Object result = methodInvocation.proceed();
                 HulkContext subBusinessActivity = JSONObject.parseObject((String) result, HulkContext.class);
-                RuntimeContext rc = hc.getRc();
-                rc.getActivity().getAtomicTryActions().addAll(subBusinessActivity.getRc().getActivity().getAtomicTryActions());
-                rc.getActivity().getAtomicCommitActions().addAll(subBusinessActivity.getRc().getActivity().getAtomicCommitActions());
-                rc.getActivity().getAtomicRollbackActions().addAll(subBusinessActivity.getRc().getActivity().getAtomicRollbackActions());
-
-                BusinessActivityContext bac = hc.getBac();
-                bac.getParams().putAll(subBusinessActivity.getBac().getParams());
-                return new HulkContext(bac, rc);
+                am.put(orders.indexOf(name), subBusinessActivity);
+                return am;
             } catch (Throwable t) {
                 logger.error("Broker Request Exception", t);
             }
             return null;
-        }));
+        }, bam.getTryExecutor()));
         return "ok";
+    }
+
+    public static void setOrders(List<String> orders) {
+        BrokerInterceptor.orders = orders;
+    }
+
+    public static List<String> getOrders() {
+        return orders;
     }
 
 }

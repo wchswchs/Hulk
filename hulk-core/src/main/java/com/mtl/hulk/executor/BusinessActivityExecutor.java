@@ -11,26 +11,35 @@ import java.util.concurrent.Callable;
 public class BusinessActivityExecutor extends AbstractHulk implements Callable<Integer> {
 
     private BusinessActivityManagerImpl bam;
+    private boolean isRunCommit;
 
-    public BusinessActivityExecutor(BusinessActivityManagerImpl bam) {
+    public BusinessActivityExecutor(BusinessActivityManagerImpl bam, boolean isRunCommit) {
         this.bam = bam;
+        this.isRunCommit = isRunCommit;
     }
 
     @Override
     public Integer call() {
         boolean status = false;
-        if (RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.TRIED) {
+        if (isRunCommit) {
             status = bam.commit();
-        }
-        if (!status || RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.COMMITING_FAILED) {
+            if (status) {
+                RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITTED);
+            } else {
+                status = bam.rollback();
+                if (!status) {
+                    RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKING_FAILED);
+                } else {
+                    RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKED);
+                }
+            }
+        } else {
             status = bam.rollback();
             if (!status) {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKING_FAILED);
             } else {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKED);
             }
-        } else {
-            RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITTED);
         }
         return BooleanUtils.toInteger(status);
     }
