@@ -2,7 +2,7 @@ package com.mtl.hulk.context;
 
 public class RuntimeContextHolder {
 
-    private static final InheritableThreadLocal<RuntimeContext> contextHolder = new InheritableThreadLocal<RuntimeContext>();
+    private static final ThreadLocal<RuntimeContext> contextHolder = new ThreadLocal<RuntimeContext>();
 
     public static RuntimeContext getContext() {
         RuntimeContext ctx = contextHolder.get();

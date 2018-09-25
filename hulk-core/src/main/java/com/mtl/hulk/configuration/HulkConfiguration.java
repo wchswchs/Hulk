@@ -8,7 +8,6 @@ import com.mtl.hulk.aop.interceptor.TransactionInterceptor;
 import com.mtl.hulk.aop.pointcut.BrokerPointcut;
 import com.mtl.hulk.aop.pointcut.TransactionPointcut;
 import com.mtl.hulk.bam.BusinessActivityManagerImpl;
-import com.mtl.hulk.listener.BusinessActivityListener;
 import com.mtl.hulk.logger.data.sql.SQLDataSource;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
@@ -40,7 +39,7 @@ public class HulkConfiguration {
 
     @Bean
     public BusinessActivityManagerImpl bam() {
-        return new BusinessActivityManagerImpl(properties, listener(), applicationContext);
+        return new BusinessActivityManagerImpl(properties, hulkDataSource(), applicationContext);
     }
 
     @Bean
@@ -65,11 +64,6 @@ public class HulkConfiguration {
     @Bean
     public BrokerInterceptor hulkBrokerInterceptor() {
         return new BrokerInterceptor(bam());
-    }
-
-    @Bean
-    public BusinessActivityListener listener() {
-        return new BusinessActivityListener(hulkDataSource());
     }
 
     @Bean

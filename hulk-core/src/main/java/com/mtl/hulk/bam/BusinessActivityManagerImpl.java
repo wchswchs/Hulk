@@ -1,6 +1,7 @@
 package com.mtl.hulk.bam;
 
 import com.mtl.hulk.AbstractHulk;
+import com.mtl.hulk.HulkDataSource;
 import com.mtl.hulk.HulkException;
 import com.mtl.hulk.aop.interceptor.BrokerInterceptor;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
@@ -27,9 +28,9 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
 
     private BusinessActivityListener listener;
 
-    public BusinessActivityManagerImpl(HulkProperties properties, BusinessActivityListener listener, ApplicationContext applicationContext) {
-        super(properties, applicationContext);
-        this.listener = listener;
+    public BusinessActivityManagerImpl(HulkProperties properties, HulkDataSource ds, ApplicationContext applicationContext) {
+        super(properties, ds, applicationContext);
+        this.listener = new BusinessActivityListener(ds);
     }
 
     @Override

@@ -3,12 +3,10 @@ package com.mtl.hulk.listener;
 import com.mtl.hulk.HulkDataSource;
 import com.mtl.hulk.HulkException;
 import com.mtl.hulk.HulkListener;
-import com.mtl.hulk.context.BusinessActivityContext;
-import com.mtl.hulk.context.BusinessActivityContextHolder;
-import com.mtl.hulk.context.RuntimeContext;
+import com.mtl.hulk.context.*;
+import com.mtl.hulk.logger.BusinessActivityLoggerExceptionThread;
 import com.mtl.hulk.message.HulkErrorCode;
 import com.mtl.hulk.model.*;
-import com.mtl.hulk.context.RuntimeContextHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -77,8 +75,10 @@ public class AtomicActionListener extends HulkListener {
                 BusinessActivityException bax = new BusinessActivityException();
                 bax.setId(context.getActivity().getId());
                 bax.setException(ex.getMessage());
-                bam.getLoggerExceptionThread().setEx(bax);
-                loggerExecutor.submit(bam.getLoggerExceptionThread());
+                BusinessActivityLoggerExceptionThread exceptionLogThread =new BusinessActivityLoggerExceptionThread(bam.getProperties(), bam.getDataSource(),
+                        new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext()));
+                exceptionLogThread.setEx(bax);
+                loggerExecutor.submit(exceptionLogThread);
                 return false;
             } catch (Throwable ex) {
                 logger.error("Hulk Commit/Rollback Exception", ex);
@@ -96,8 +96,10 @@ public class AtomicActionListener extends HulkListener {
                 BusinessActivityException bax = new BusinessActivityException();
                 bax.setId(context.getActivity().getId());
                 bax.setException(ex.getMessage());
-                bam.getLoggerExceptionThread().setEx(bax);
-                loggerExecutor.submit(bam.getLoggerExceptionThread());
+                BusinessActivityLoggerExceptionThread exceptionLogThread =new BusinessActivityLoggerExceptionThread(bam.getProperties(), bam.getDataSource(),
+                        new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext()));
+                exceptionLogThread.setEx(bax);
+                loggerExecutor.submit(exceptionLogThread);
                 return false;
             }
         }

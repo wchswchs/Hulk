@@ -2,7 +2,7 @@ package com.mtl.hulk.context;
 
 public class BusinessActivityContextHolder {
 
-    private static final InheritableThreadLocal<BusinessActivityContext> contextHolder = new InheritableThreadLocal<BusinessActivityContext>();
+    private static final ThreadLocal<BusinessActivityContext> contextHolder = new ThreadLocal<BusinessActivityContext>();
 
     public static BusinessActivityContext getContext() {
         BusinessActivityContext ctx = contextHolder.get();

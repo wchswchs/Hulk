@@ -5,7 +5,6 @@ import com.mtl.hulk.context.BusinessActivityContext;
 import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.context.RuntimeContext;
 import com.mtl.hulk.logger.BusinessActivityLoggerExceptionThread;
-import com.mtl.hulk.logger.BusinessActivityLoggerThread;
 import org.springframework.context.ApplicationContext;
 
 import java.util.Map;
@@ -19,8 +18,6 @@ public abstract class AbstractHulk {
     protected RuntimeContext context;
     protected BusinessActivityContext businessActivityContext;
     protected ApplicationContext applicationContext;
-    protected BusinessActivityLoggerThread loggerThread;
-    protected BusinessActivityLoggerExceptionThread loggerExceptionThread;
     protected ExecutorService transactionExecutor;
     protected ExecutorService tryExecutor;
     protected ExecutorService logExecutor;
@@ -54,9 +51,10 @@ public abstract class AbstractHulk {
         this.applicationContext = applicationContext;
     }
 
-    public AbstractHulk(HulkDataSource ds, HulkProperties properties) {
+    public AbstractHulk(HulkProperties properties, HulkDataSource ds, ApplicationContext applicationContext) {
         this.dataSource = ds;
         this.properties = properties;
+        this.applicationContext = applicationContext;
     }
 
     public AbstractHulk(HulkProperties properties) {
@@ -89,18 +87,6 @@ public abstract class AbstractHulk {
 
     public HulkDataSource getDataSource() {
         return dataSource;
-    }
-
-    public void setLoggerThread(BusinessActivityLoggerThread loggerThread) {
-        this.loggerThread = loggerThread;
-    }
-
-    public void setLoggerExceptionThread(BusinessActivityLoggerExceptionThread loggerExceptionThread) {
-        this.loggerExceptionThread = loggerExceptionThread;
-    }
-
-    public BusinessActivityLoggerExceptionThread getLoggerExceptionThread() {
-        return loggerExceptionThread;
     }
 
     public void setContext(RuntimeContext context) {
