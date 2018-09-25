@@ -7,6 +7,11 @@ public final class HulkContext {
 
     public HulkContext() {}
 
+    public HulkContext(BusinessActivityContext bac, RuntimeContext rc) {
+        this.bac = bac;
+        this.rc = rc;
+    }
+
     public void setBac(BusinessActivityContext bac) {
         this.bac = bac;
     }

@@ -9,8 +9,8 @@ import com.mtl.hulk.context.RuntimeContextHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class BusinessActivityListener extends HulkListener {
 
@@ -22,7 +22,7 @@ public class BusinessActivityListener extends HulkListener {
 
     @Override
     public boolean process() {
-        List<AtomicAction> currentActions = new ArrayList<>();
+        List<AtomicAction> currentActions = new CopyOnWriteArrayList<AtomicAction>();
         RuntimeContext context = RuntimeContextHolder.getContext();
         if (context.getActivity().getStatus() == BusinessActivityStatus.COMMITTING) {
             currentActions = context.getActivity().getAtomicCommitActions();

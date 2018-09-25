@@ -16,7 +16,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableAutoConfiguration(exclude = DataSourceAutoConfiguration.class)
 @ComponentScan(basePackages = {"com.mtl.demo.service.service", "com.mtl.demo.serviceB.service", "com.mtl.demo.serviceC.service", "com.mtl.hulk"}/*, basePackageClasses = {ApplicationContextUtils.class}*/)
 @EnableFeignClients("com.mtl.demo.service.feign")
-@PropertySource({"file:/apps/config/job/hulk_job_global.properties", "file:/apps/config/hulk/hulk.properties"})
+@PropertySource({"file:/opt/job/hulk_job_global.properties", "file:/opt/hulk/hulk.properties"})
 public class JobExecutor {
     public static void main(final String[] args) {
         SpringApplication.run(JobExecutor.class, args);

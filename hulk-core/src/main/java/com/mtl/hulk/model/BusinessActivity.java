@@ -1,21 +1,20 @@
 package com.mtl.hulk.model;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class BusinessActivity {
 
     private BusinessActivityId id;
-    private List<AtomicAction> atomicTryActions = new ArrayList<>();
-    private List<AtomicAction> atomicCommitActions = new ArrayList<>();
-    private List<AtomicAction> atomicRollbackActions = new ArrayList<>();
+    private List<AtomicAction> atomicTryActions = new CopyOnWriteArrayList<>();
+    private List<AtomicAction> atomicCommitActions = new CopyOnWriteArrayList<>();
+    private List<AtomicAction> atomicRollbackActions = new CopyOnWriteArrayList<>();
     private BusinessActivityId pid = null;
     private long timeout;
     private BusinessActivityStatus status;
     private Date startTime = Calendar.getInstance().getTime();
-
 
     public void setId(BusinessActivityId id) {
         this.id = id;

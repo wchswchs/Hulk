@@ -1,7 +1,6 @@
 package com.mtl.hulk.aop.interceptor;
 
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.BusinessActivityIdSequenceFactory;
 import com.mtl.hulk.HulkException;
 import com.mtl.hulk.HulkResponse;
@@ -12,6 +11,7 @@ import com.mtl.hulk.aop.HulkAspectSupport;
 import com.mtl.hulk.bam.BusinessActivityManagerImpl;
 import com.mtl.hulk.context.*;
 import com.mtl.hulk.executor.BusinessActivityExecutor;
+import com.mtl.hulk.logger.BusinessActivityLoggerThread;
 import com.mtl.hulk.message.HulkErrorCode;
 import com.mtl.hulk.model.*;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -43,21 +43,15 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
         HulkResponse response = null;
         boolean status = true;
         Future<Integer> future = null;
-        ThreadPoolExecutor executor = null;
+        ExecutorService executor = bam.getTransactionExecutor();
         Integer result = 1;
-        ThreadPoolExecutor loggerExecutor = new ThreadPoolExecutor(50,
-                bam.getProperties().getLogThreadPoolSize(), 5L,
-                TimeUnit.SECONDS, new SynchronousQueue<>(),
-                (new ThreadFactoryBuilder()).setNameFormat("logger-thread-%d").build());
+        ExecutorService loggerExecutor = bam.getLogExecutor();
         try {
             status = bam.start(methodInvocation);
             if (status) {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRIED);
-                executor = new ThreadPoolExecutor(50,
-                        bam.getProperties().getLogThreadPoolSize(), 5L,
-                        TimeUnit.SECONDS, new SynchronousQueue<>(),
-                        (new ThreadFactoryBuilder()).setNameFormat("Transaction-Thread-%d").build());
-                future = executor.submit(new BusinessActivityExecutor(bam));
+                future = executor.submit(new BusinessActivityExecutor(bam, new HulkContext(BusinessActivityContextHolder.getContext(),
+                                        RuntimeContextHolder.getContext())));
                 result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
             } else {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRYING_EXPT);
@@ -70,29 +64,32 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
                 hulkContext.setRc(RuntimeContextHolder.getContext());
                 return JSONObject.toJSONString(hulkContext);
             } else {
-                loggerExecutor.submit(loggerThread);
+                loggerExecutor.submit(new BusinessActivityLoggerThread(bam.getProperties(), bam.getDataSource(),
+                                    new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext())));
             }
 
             response = HulkResponseFactory.getResponse(result);
         } catch (TimeoutException ex) {
             RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_TIMEOUT.getCode(),
-                                                        HulkErrorCode.COMMIT_TIMEOUT.getMessage()));
+                    HulkErrorCode.COMMIT_TIMEOUT.getMessage()));
             future.cancel(true);
-            future = executor.submit(new BusinessActivityExecutor(bam));
+            future = executor.submit(new BusinessActivityExecutor(bam, new HulkContext(BusinessActivityContextHolder.getContext(),
+                                    RuntimeContextHolder.getContext())));
             result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
             response = HulkResponseFactory.getResponse(result);
-        } catch (Throwable ex) {
+        } catch (NullPointerException ex) {
+            logger.error("Transaction Interceptor Error", ex);
+        } catch (Exception ex) {
             logger.error("Transaction Interceptor Error", ex);
         } finally {
             BusinessActivityContextHolder.clearContext();
             RuntimeContextHolder.clearContext();
             if (context.getActivity().getId() != null) {
-                future.cancel(false);
-                executor.shutdown();
+                if (future != null) {
+                    future.cancel(false);
+                }
             }
-            loggerExecutor.shutdown();
         }
-
         return JSONObject.toJSONString(response);
     }
 
