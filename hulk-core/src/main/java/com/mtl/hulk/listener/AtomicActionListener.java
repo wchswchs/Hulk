@@ -59,22 +59,13 @@ public class AtomicActionListener extends HulkListener {
                 }
             } catch (InvocationTargetException ex) {
                 logger.error("Hulk Commit/Rollback Exception", ex);
-                if (RuntimeContextHolder.getContext().getException().getCode() != HulkErrorCode.COMMIT_TIMEOUT.getCode()) {
-                    if (RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.COMMITTING) {
-                        RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_FAIL.getCode(),
-                                MessageFormat.format(HulkErrorCode.COMMIT_FAIL.getMessage(),
-                                        RuntimeContextHolder.getContext().getActivity().getId().formatString(),
-                                        action.getServiceOperation().getName())));
-                    } else {
-                        RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.ROLLBACK_FAIL.getCode(),
-                                MessageFormat.format(HulkErrorCode.ROLLBACK_FAIL.getMessage(),
-                                        RuntimeContextHolder.getContext().getActivity().getId().formatString(),
-                                        action.getServiceOperation().getName())));
-                    }
+                if (ex.getTargetException().getMessage().contains("interrupted")) {
+                    RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.INTERRUPTED.getCode(),
+                                                        HulkErrorCode.INTERRUPTED.getMessage()));
                 }
                 BusinessActivityException bax = new BusinessActivityException();
                 bax.setId(context.getActivity().getId());
-                bax.setException(ex.getMessage());
+                bax.setException(ex.getTargetException().getMessage());
                 BusinessActivityLoggerExceptionThread exceptionLogThread =new BusinessActivityLoggerExceptionThread(bam.getProperties(), bam.getDataSource(),
                         new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext()));
                 exceptionLogThread.setEx(bax);

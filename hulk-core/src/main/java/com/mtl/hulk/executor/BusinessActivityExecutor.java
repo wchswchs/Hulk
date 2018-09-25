@@ -5,6 +5,7 @@ import com.mtl.hulk.bam.BusinessActivityManagerImpl;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
 import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.context.RuntimeContextHolder;
+import com.mtl.hulk.message.HulkErrorCode;
 import com.mtl.hulk.model.BusinessActivityStatus;
 import org.apache.commons.lang3.BooleanUtils;
 
@@ -27,10 +28,18 @@ public class BusinessActivityExecutor extends AbstractHulk implements Callable<I
         boolean status = false;
         if (RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.TRIED) {
             status = bam.commit();
+            if (RuntimeContextHolder.getContext()
+                    .getException().getCode() == HulkErrorCode.INTERRUPTED.getCode()) {
+                return BooleanUtils.toInteger(status);
+            }
             if (status) {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITTED);
             } else {
                 status = bam.rollback();
+                if (RuntimeContextHolder.getContext()
+                        .getException().getCode() == HulkErrorCode.INTERRUPTED.getCode()) {
+                    return BooleanUtils.toInteger(status);
+                }
                 if (!status) {
                     RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKING_FAILED);
                 } else {
@@ -39,6 +48,10 @@ public class BusinessActivityExecutor extends AbstractHulk implements Callable<I
             }
         } else {
             status = bam.rollback();
+            if (RuntimeContextHolder.getContext()
+                    .getException().getCode() == HulkErrorCode.INTERRUPTED.getCode()) {
+                return BooleanUtils.toInteger(status);
+            }
             if (!status) {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKING_FAILED);
             } else {
