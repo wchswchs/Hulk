@@ -19,4 +19,4 @@ hystrix:
             timeoutInMilliseconds: 15000
 
 logging:
-  config: /apps/config/logconfig/hulk-logback.xml
+  config: /opt/logconfig/hulk-logback.xml
