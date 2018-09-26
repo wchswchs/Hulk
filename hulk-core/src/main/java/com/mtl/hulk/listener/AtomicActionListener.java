@@ -34,7 +34,12 @@ public class AtomicActionListener extends HulkListener {
             RuntimeContext context = RuntimeContextHolder.getContext();
             ExecutorService loggerExecutor = bam.getLogExecutor();
             try {
-                Object object = applicationContext.getBean(tryAction.getServiceOperation().getBeanClass());
+                Object object = null;
+                if (applicationContext.getId().split(":")[0].equals(action.getServiceOperation().getService())) {
+                    object = applicationContext.getBean(tryAction.getServiceOperation().getBeanClass());
+                } else {
+                    object = bam.getClients().get(action.getServiceOperation().getService());
+                }
                 Method method = object.getClass().getMethod(action.getServiceOperation().getName(), BusinessActivityContext.class);
                 if (method == null) {
                     return false;

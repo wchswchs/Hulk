@@ -29,6 +29,7 @@ public class BusinessActivityExecutor extends AbstractHulk implements Callable<I
         if (RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.TRIED) {
             status = bam.commit();
             if (RuntimeContextHolder.getContext()
+                    .getException() != null && RuntimeContextHolder.getContext()
                     .getException().getCode() == HulkErrorCode.INTERRUPTED.getCode()) {
                 return BooleanUtils.toInteger(status);
             }
