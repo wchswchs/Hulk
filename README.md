@@ -22,23 +22,7 @@
 ### 依赖与配置项
 #### 工程依赖
 
-发起方在工程中添加如下依赖：
-
-```java
-<dependency>
-  <groupId>com.mtl.hulk</groupId>
-  <artifactId>hulk-core</artifactId>
-  <version>${hulk.version}</version>
-</dependency>
-//参与方依赖
-<dependency>
-  <groupId>com.service.transfer</groupId>
-  <artifactId>transfer-minus</artifactId>
-  <version>${transfer-minus.version}</version>
-</dependency>
-```
-
-参与者在工程中添加如下依赖：
+发起方和参与方在工程中添加如下依赖：
 
 ```java
 <dependency>
