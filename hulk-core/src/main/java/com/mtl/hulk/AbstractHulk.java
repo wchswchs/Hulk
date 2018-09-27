@@ -4,7 +4,6 @@ import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.BusinessActivityContext;
 import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.context.RuntimeContext;
-import com.mtl.hulk.logger.BusinessActivityLoggerExceptionThread;
 import org.springframework.context.ApplicationContext;
 
 import java.util.Map;
@@ -21,7 +20,9 @@ public abstract class AbstractHulk {
     protected ExecutorService transactionExecutor;
     protected ExecutorService tryExecutor;
     protected ExecutorService logExecutor;
+    protected ExecutorService runExecutor;
     protected CompletableFuture<Map<Integer, HulkContext>> future;
+    protected CompletableFuture<HulkContext> runFuture;
 
     public AbstractHulk(HulkDataSource dataSource, HulkProperties properties, RuntimeContext context, ApplicationContext applicationContext) {
         this.dataSource = dataSource;
@@ -101,6 +102,14 @@ public abstract class AbstractHulk {
         return future;
     }
 
+    public void setRunFuture(CompletableFuture<HulkContext> runFuture) {
+        this.runFuture = runFuture;
+    }
+
+    public CompletableFuture<HulkContext> getRunFuture() {
+        return runFuture;
+    }
+
     public void setTransactionExecutor(ExecutorService transactionExecutor) {
         this.transactionExecutor = transactionExecutor;
     }
@@ -125,4 +134,12 @@ public abstract class AbstractHulk {
         return tryExecutor;
     }
 
+    public void setRunExecutor(ExecutorService runExecutor) {
+        this.runExecutor = runExecutor;
+    }
+
+    public ExecutorService getRunExecutor() {
+        return runExecutor;
+    }
+    
 }

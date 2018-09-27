@@ -17,14 +17,18 @@ public class HulkServiceBImpl implements HulkServiceB {
     public String getHulkServiceB(int a, int b) {
         return "HulkServiceB/////////////";
     }
+
+    @Override
     public boolean confirmMysqlSaveAssetBCard(BusinessActivityContext context) throws InterruptedException {
 //        Thread.sleep(6000);
         logger.info("confirm B params: {} {}", context.getParams().get("getHulkServiceB"));
-        return false;
+        return true;
     }
 
+    @Override
     public boolean cancelMysqlSaveAssetBCard(BusinessActivityContext context) {
         logger.info("cancel B params: {} {}", context.getParams().get("getHulkServiceB"));
         return true;
     }
+
 }

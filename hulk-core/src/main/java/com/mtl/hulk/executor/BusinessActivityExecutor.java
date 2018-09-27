@@ -27,17 +27,20 @@ public class BusinessActivityExecutor extends AbstractHulk implements Callable<I
         BusinessActivityContextHolder.setContext(ctx.getBac());
         boolean status = false;
         if (RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.TRIED) {
+            RuntimeContextHolder.getContext().setException(null);
             status = bam.commit();
             if (RuntimeContextHolder.getContext()
+                    .getException() != null && RuntimeContextHolder.getContext()
                     .getException().getCode() == HulkErrorCode.INTERRUPTED.getCode()) {
                 return BooleanUtils.toInteger(status);
             }
             if (status) {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITTED);
             } else {
+                RuntimeContextHolder.getContext().setException(null);
                 status = bam.rollback();
-                if (RuntimeContextHolder.getContext()
-                        .getException().getCode() == HulkErrorCode.INTERRUPTED.getCode()) {
+                if (RuntimeContextHolder.getContext().getException() != null &&
+                        RuntimeContextHolder.getContext().getException().getCode() == HulkErrorCode.INTERRUPTED.getCode()) {
                     return BooleanUtils.toInteger(status);
                 }
                 if (!status) {
@@ -47,9 +50,10 @@ public class BusinessActivityExecutor extends AbstractHulk implements Callable<I
                 }
             }
         } else {
+            RuntimeContextHolder.getContext().setException(null);
             status = bam.rollback();
-            if (RuntimeContextHolder.getContext()
-                    .getException().getCode() == HulkErrorCode.INTERRUPTED.getCode()) {
+            if (RuntimeContextHolder.getContext().getException() != null &&
+                    RuntimeContextHolder.getContext().getException().getCode() == HulkErrorCode.INTERRUPTED.getCode()) {
                 return BooleanUtils.toInteger(status);
             }
             if (!status) {

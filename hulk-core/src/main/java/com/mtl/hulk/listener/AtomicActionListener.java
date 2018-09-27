@@ -31,68 +31,74 @@ public class AtomicActionListener extends HulkListener {
     public boolean process() {
         if (action.getServiceOperation().getType() == ServiceOperationType.TCC) {
             BusinessActivityContext bac = BusinessActivityContextHolder.getContext();
-            RuntimeContext context = RuntimeContextHolder.getContext();
             ExecutorService loggerExecutor = bam.getLogExecutor();
-            try {
-                Object object = applicationContext.getBean(tryAction.getServiceOperation().getBeanClass());
-                Method method = object.getClass().getMethod(action.getServiceOperation().getName(), BusinessActivityContext.class);
-                if (method == null) {
-                    return false;
+            bam.setRunFuture(bam.getRunFuture().thenApplyAsync(ctx -> {
+                if (ctx.getRc().getException() != null) {
+                    return ctx;
                 }
-                Object ret = method.invoke(object, bac);
-                if (ret == null) {
-                    return false;
+                Object object = null;
+                if (applicationContext.getId().split(":")[0].equals(action.getServiceOperation().getService())) {
+                    object = applicationContext.getBean(tryAction.getServiceOperation().getBeanClass());
+                } else {
+                    object = bam.getClients().get(action.getServiceOperation().getService());
                 }
-                if (((boolean) ret) == false) {
-                    if (RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.COMMITTING) {
-                        RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_FAIL.getCode(),
+                try {
+                    logger.info("Transaction Executor running: {}", action.getServiceOperation().getName());
+                    Method method = object.getClass().getMethod(action.getServiceOperation().getName(), BusinessActivityContext.class);
+                    Object ret = method.invoke(object, bac);
+                    if (((boolean) ret) == false) {
+                        if (ctx.getRc().getActivity().getStatus() == BusinessActivityStatus.COMMITTING) {
+                            ctx.getRc().setException(new HulkException(HulkErrorCode.COMMIT_FAIL.getCode(),
+                                    MessageFormat.format(HulkErrorCode.COMMIT_FAIL.getMessage(),
+                                            ctx.getRc().getActivity().getId().formatString(),
+                                            action.getServiceOperation().getName())));
+                        } else {
+                            ctx.getRc().setException(new HulkException(HulkErrorCode.ROLLBACK_FAIL.getCode(),
+                                    MessageFormat.format(HulkErrorCode.ROLLBACK_FAIL.getMessage(),
+                                            ctx.getRc().getActivity().getId().formatString(),
+                                            action.getServiceOperation().getName())));
+                        }
+                        return ctx;
+                    }
+                } catch (InvocationTargetException ex) {
+                    logger.error("Hulk Commit/Rollback Exception", ex);
+                    if (ex.getTargetException().getMessage().contains("interrupted")) {
+                        ctx.getRc().setException(new HulkException(HulkErrorCode.INTERRUPTED.getCode(),
+                                HulkErrorCode.INTERRUPTED.getMessage()));
+                    }
+                    BusinessActivityException bax = new BusinessActivityException();
+                    bax.setId(ctx.getRc().getActivity().getId());
+                    bax.setException(ex.getTargetException().getMessage());
+                    BusinessActivityLoggerExceptionThread exceptionLogThread =new BusinessActivityLoggerExceptionThread(bam.getProperties(), bam.getDataSource(),
+                            new HulkContext(ctx.getBac(), ctx.getRc()));
+                    exceptionLogThread.setEx(bax);
+                    loggerExecutor.submit(exceptionLogThread);
+                    return ctx;
+                } catch (Throwable ex) {
+                    logger.error("Hulk Commit/Rollback Exception", ex);
+                    if (ctx.getRc().getActivity().getStatus() == BusinessActivityStatus.COMMITTING) {
+                        ctx.getRc().setException(new HulkException(HulkErrorCode.COMMIT_FAIL.getCode(),
                                 MessageFormat.format(HulkErrorCode.COMMIT_FAIL.getMessage(),
-                                        RuntimeContextHolder.getContext().getActivity().getId().formatString(),
+                                        ctx.getRc().getActivity().getId().formatString(),
                                         action.getServiceOperation().getName())));
                     } else {
-                        RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.ROLLBACK_FAIL.getCode(),
+                        ctx.getRc().setException(new HulkException(HulkErrorCode.ROLLBACK_FAIL.getCode(),
                                 MessageFormat.format(HulkErrorCode.ROLLBACK_FAIL.getMessage(),
-                                        RuntimeContextHolder.getContext ().getActivity().getId().formatString(),
+                                        ctx.getRc().getActivity().getId().formatString(),
                                         action.getServiceOperation().getName())));
                     }
-                    return false;
+                    BusinessActivityException bax = new BusinessActivityException();
+                    bax.setId(ctx.getRc().getActivity().getId());
+                    bax.setException(ex.getMessage());
+                    BusinessActivityLoggerExceptionThread exceptionLogThread = new BusinessActivityLoggerExceptionThread(bam.getProperties(), bam.getDataSource(),
+                            new HulkContext(ctx.getBac(), ctx.getRc()));
+                    exceptionLogThread.setEx(bax);
+                    loggerExecutor.submit(exceptionLogThread);
+                    return ctx;
+                } finally {
                 }
-            } catch (InvocationTargetException ex) {
-                logger.error("Hulk Commit/Rollback Exception", ex);
-                if (ex.getTargetException().getMessage().contains("interrupted")) {
-                    RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.INTERRUPTED.getCode(),
-                                                        HulkErrorCode.INTERRUPTED.getMessage()));
-                }
-                BusinessActivityException bax = new BusinessActivityException();
-                bax.setId(context.getActivity().getId());
-                bax.setException(ex.getTargetException().getMessage());
-                BusinessActivityLoggerExceptionThread exceptionLogThread =new BusinessActivityLoggerExceptionThread(bam.getProperties(), bam.getDataSource(),
-                        new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext()));
-                exceptionLogThread.setEx(bax);
-                loggerExecutor.submit(exceptionLogThread);
-                return false;
-            } catch (Throwable ex) {
-                logger.error("Hulk Commit/Rollback Exception", ex);
-                if (RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.COMMITTING) {
-                    RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_FAIL.getCode(),
-                            MessageFormat.format(HulkErrorCode.COMMIT_FAIL.getMessage(),
-                            RuntimeContextHolder.getContext().getActivity().getId().formatString(),
-                            action.getServiceOperation().getName())));
-                } else {
-                    RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.ROLLBACK_FAIL.getCode(),
-                            MessageFormat.format(HulkErrorCode.ROLLBACK_FAIL.getMessage(),
-                            RuntimeContextHolder.getContext().getActivity().getId().formatString(),
-                            action.getServiceOperation().getName())));
-                }
-                BusinessActivityException bax = new BusinessActivityException();
-                bax.setId(context.getActivity().getId());
-                bax.setException(ex.getMessage());
-                BusinessActivityLoggerExceptionThread exceptionLogThread =new BusinessActivityLoggerExceptionThread(bam.getProperties(), bam.getDataSource(),
-                        new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext()));
-                exceptionLogThread.setEx(bax);
-                loggerExecutor.submit(exceptionLogThread);
-                return false;
-            }
+                return ctx;
+            }, bam.getRunExecutor()));
         }
         return true;
     }

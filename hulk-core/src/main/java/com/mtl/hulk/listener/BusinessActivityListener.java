@@ -1,7 +1,10 @@
 package com.mtl.hulk.listener;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.HulkDataSource;
 import com.mtl.hulk.HulkListener;
+import com.mtl.hulk.context.BusinessActivityContextHolder;
+import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.model.AtomicAction;
 import com.mtl.hulk.model.BusinessActivityStatus;
 import com.mtl.hulk.context.RuntimeContext;
@@ -10,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.*;
 
 public class BusinessActivityListener extends HulkListener {
 
@@ -30,16 +33,38 @@ public class BusinessActivityListener extends HulkListener {
         if (context.getActivity().getStatus() == BusinessActivityStatus.ROLLBACKING) {
             currentActions = context.getActivity().getAtomicRollbackActions();
         }
-        for (int i = 0; i < context.getActivity().getAtomicTryActions().size(); i ++) {
-            AtomicActionListener listener = new AtomicActionListener(currentActions.get(i), dataSource, applicationContext, context.getActivity().getAtomicTryActions().get(i));
-            listener.setBam(bam);
-            listener.setApplicationContext(bam.getApplicationContext());
-            boolean status = listener.process();
-            if (status == false) {
+        try {
+            bam.setRunExecutor(new ThreadPoolExecutor(bam.getProperties().getRunthreadPoolSize(),
+                    Integer.MAX_VALUE, 10L,
+                    TimeUnit.SECONDS, new SynchronousQueue<>(),
+                    (new ThreadFactoryBuilder()).setNameFormat("Run-Thread-%d").build()));
+            bam.setRunFuture(CompletableFuture.completedFuture(
+                                            new HulkContext(BusinessActivityContextHolder.getContext(),
+                                            RuntimeContextHolder.getContext())));
+            for (int i = 0; i < context.getActivity().getAtomicTryActions().size(); i ++) {
+                AtomicActionListener listener = new AtomicActionListener(currentActions.get(i), dataSource, applicationContext,
+                                                context.getActivity().getAtomicTryActions().get(i));
+                listener.setBam(bam);
+                listener.setApplicationContext(bam.getApplicationContext());
+                boolean status = listener.process();
+                if (status == false) {
+                    return false;
+                }
+            }
+            HulkContext ret = bam.getRunFuture().join();
+            if (ret.getRc().getException() != null && ret.getRc().getException().getCode() > 0) {
                 return false;
             }
+            return true;
+        } finally {
+            if (bam.getRunFuture() != null) {
+                if (bam.getRunFuture().isCompletedExceptionally() ||
+                        bam.getRunFuture().isDone()) {
+                    bam.getRunFuture().cancel(false);
+                }
+            }
+            bam.getRunExecutor().shutdown();
         }
-        return true;
     }
 
 }

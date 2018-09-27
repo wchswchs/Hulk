@@ -18,11 +18,14 @@ public class HulkServcieCImpl implements HulkServiceC {
 //        Thread.sleep(3000);
         return "HulkServiceCXXXXXXXXXXXXXXXXXXXXXXXs";
     }
+
+    @Override
     public boolean confirmMysqlSaveAssetCCard(BusinessActivityContext context) {
         logger.info("confirm C params: {}", context.getParams().get("getHulkServiceC"));
         return true;
     }
 
+    @Override
     public boolean cancelMysqlSaveAssetCCard(BusinessActivityContext context) {
         logger.info("cancel C params: {}", context.getParams().get("getHulkServiceC"));
         return true;

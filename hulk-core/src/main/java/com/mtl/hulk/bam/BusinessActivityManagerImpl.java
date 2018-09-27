@@ -27,6 +27,7 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
     private final Logger logger = LoggerFactory.getLogger(BusinessActivityManagerImpl.class);
 
     private BusinessActivityListener listener;
+    private Map<String, Object> clients = new ConcurrentHashMap<String, Object>();
 
     public BusinessActivityManagerImpl(HulkProperties properties, HulkDataSource ds, ApplicationContext applicationContext) {
         super(properties, ds, applicationContext);
@@ -113,6 +114,10 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
 
     public HulkProperties getProperties() {
         return properties;
+    }
+
+    public Map<String, Object> getClients() {
+        return clients;
     }
 
 }

@@ -103,7 +103,7 @@ public class HulkConfiguration {
                         Integer.MAX_VALUE, 5L,
                         TimeUnit.SECONDS, new SynchronousQueue<>(),
                         (new ThreadFactoryBuilder()).setNameFormat("Hulk-Log-Thread-%d").build()));
-                bam.setTryExecutor(new ThreadPoolExecutor(bam.getProperties().getTryhreadPoolSize(),
+                bam.setTryExecutor(new ThreadPoolExecutor(bam.getProperties().getTrythreadPoolSize(),
                         Integer.MAX_VALUE, 10L,
                         TimeUnit.SECONDS, new SynchronousQueue<>(),
                         (new ThreadFactoryBuilder()).setNameFormat("Try-Thread-%d").build()));

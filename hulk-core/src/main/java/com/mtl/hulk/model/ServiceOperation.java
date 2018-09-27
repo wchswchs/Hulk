@@ -4,6 +4,7 @@ public class ServiceOperation {
 
     private String name;
     private String beanClass;
+    private String service;
     private ServiceOperationType type;
 
     public ServiceOperationType getType() {
@@ -28,6 +29,14 @@ public class ServiceOperation {
 
     public String getBeanClass() {
         return beanClass;
+    }
+
+    public void setService(String service) {
+        this.service = service;
+    }
+
+    public String getService() {
+        return service;
     }
 
 }

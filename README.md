@@ -1,7 +1,7 @@
 # Hulk
 高性能分布式事务框架(TCC模式，基于Spring Cloud)
 
-该框架采用TCC请求异步化和无锁设计方案，极大提升了事务处理的性能，同时使用标签投递的思想保证了事务执行的有序性。
+该框架采用TCC请求异步化和无锁设计方案，极大提升了事务处理的性能。
 
 ## 特性
 
@@ -11,7 +11,7 @@
 4. 支持事务日志存储读写分离
 5. 事务日志线程池、事务ID生成策略可配置
 6. 支持分支事务(事务嵌套)
-7. 保证事务的有序性
+7. 业务代码无侵入
 
 ## 使用指南
 
@@ -22,23 +22,7 @@
 ### 依赖与配置项
 #### 工程依赖
 
-发起方在工程中添加如下依赖：
-
-```java
-<dependency>
-  <groupId>com.mtl.hulk</groupId>
-  <artifactId>hulk-core</artifactId>
-  <version>${hulk.version}</version>
-</dependency>
-//参与方依赖
-<dependency>
-  <groupId>com.service.transfer</groupId>
-  <artifactId>transfer-minus</artifactId>
-  <version>${transfer-minus.version}</version>
-</dependency>
-```
-
-参与者在工程中添加如下依赖：
+发起方和参与方在工程中添加如下依赖：
 
 ```java
 <dependency>

@@ -72,7 +72,9 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
         } catch (TimeoutException ex) {
             RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_TIMEOUT.getCode(),
                     HulkErrorCode.COMMIT_TIMEOUT.getMessage()));
-            future.cancel(true);
+            bam.getRunFuture().cancel(true);
+            bam.getRunExecutor().shutdownNow();
+            future.cancel(false);
             future = executor.submit(new BusinessActivityExecutor(bam, new HulkContext(BusinessActivityContextHolder.getContext(),
                                     RuntimeContextHolder.getContext())));
             result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
@@ -131,6 +133,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
         AtomicAction confirmAction = new AtomicAction();
         ServiceOperation confirmServiceOperation = new ServiceOperation();
         confirmServiceOperation.setName(transaction.confirmMethod());
+        confirmServiceOperation.setService(bam.getApplicationContext().getId().split(":")[0]);
         confirmServiceOperation.setType(ServiceOperationType.TCC);
         confirmAction.setServiceOperation(confirmServiceOperation);
         confirmAction.setCallType(transaction.callType());
@@ -139,6 +142,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
         AtomicAction cancelAction = new AtomicAction();
         ServiceOperation cancelServiceOperation = new ServiceOperation();
         cancelServiceOperation.setName(transaction.cancelMethod());
+        cancelServiceOperation.setService(bam.getApplicationContext().getId().split(":")[0]);
         cancelServiceOperation.setType(ServiceOperationType.TCC);
         cancelAction.setServiceOperation(cancelServiceOperation);
         cancelAction.setCallType(transaction.callType());
