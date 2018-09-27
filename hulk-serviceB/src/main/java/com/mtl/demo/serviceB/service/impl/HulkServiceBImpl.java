@@ -19,10 +19,10 @@ public class HulkServiceBImpl implements HulkServiceB {
     }
 
     @Override
-    public boolean confirmMysqlSaveAssetBCard(BusinessActivityContext context) {
+    public boolean confirmMysqlSaveAssetBCard(BusinessActivityContext context) throws InterruptedException {
 //        Thread.sleep(6000);
         logger.info("confirm B params: {} {}", context.getParams().get("getHulkServiceB"));
-        return false;
+        return true;
     }
 
     @Override

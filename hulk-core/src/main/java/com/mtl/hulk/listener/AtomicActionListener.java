@@ -65,6 +65,7 @@ public class AtomicActionListener extends HulkListener {
                     if (ex.getTargetException().getMessage().contains("interrupted")) {
                         ctx.getRc().setException(new HulkException(HulkErrorCode.INTERRUPTED.getCode(),
                                 HulkErrorCode.INTERRUPTED.getMessage()));
+                        bam.getRunExecutor().shutdownNow();
                     }
                     BusinessActivityException bax = new BusinessActivityException();
                     bax.setId(ctx.getRc().getActivity().getId());

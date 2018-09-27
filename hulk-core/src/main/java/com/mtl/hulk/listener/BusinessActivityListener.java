@@ -1,5 +1,6 @@
 package com.mtl.hulk.listener;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.HulkDataSource;
 import com.mtl.hulk.HulkListener;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
@@ -12,8 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.*;
 
 public class BusinessActivityListener extends HulkListener {
 
@@ -34,6 +34,10 @@ public class BusinessActivityListener extends HulkListener {
             currentActions = context.getActivity().getAtomicRollbackActions();
         }
         try {
+            bam.setRunExecutor(new ThreadPoolExecutor(bam.getProperties().getRunthreadPoolSize(),
+                    Integer.MAX_VALUE, 10L,
+                    TimeUnit.SECONDS, new SynchronousQueue<>(),
+                    (new ThreadFactoryBuilder()).setNameFormat("Run-Thread-%d").build()));
             bam.setRunFuture(CompletableFuture.completedFuture(
                                             new HulkContext(BusinessActivityContextHolder.getContext(),
                                             RuntimeContextHolder.getContext())));
@@ -59,6 +63,7 @@ public class BusinessActivityListener extends HulkListener {
                     bam.getRunFuture().cancel(false);
                 }
             }
+            bam.getRunExecutor().shutdown();
         }
     }
 

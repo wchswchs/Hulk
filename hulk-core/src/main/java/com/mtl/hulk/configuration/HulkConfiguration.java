@@ -107,15 +107,10 @@ public class HulkConfiguration {
                         Integer.MAX_VALUE, 10L,
                         TimeUnit.SECONDS, new SynchronousQueue<>(),
                         (new ThreadFactoryBuilder()).setNameFormat("Try-Thread-%d").build()));
-                bam.setRunExecutor(new ThreadPoolExecutor(bam.getProperties().getRunthreadPoolSize(),
-                        Integer.MAX_VALUE, 10L,
-                        TimeUnit.SECONDS, new SynchronousQueue<>(),
-                        (new ThreadFactoryBuilder()).setNameFormat("Run-Thread-%d").build()));
             } else if (event instanceof ContextClosedEvent) {
                 bam.getTransactionExecutor().shutdown();
                 bam.getLogExecutor().shutdown();
                 bam.getTryExecutor().shutdown();
-                bam.getRunExecutor().shutdown();
             }
         }
 
