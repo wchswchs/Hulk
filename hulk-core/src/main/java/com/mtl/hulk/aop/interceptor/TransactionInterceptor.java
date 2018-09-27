@@ -72,7 +72,9 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
         } catch (TimeoutException ex) {
             RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_TIMEOUT.getCode(),
                     HulkErrorCode.COMMIT_TIMEOUT.getMessage()));
-            future.cancel(true);
+            bam.getRunFuture().cancel(true);
+            bam.getRunExecutor().shutdownNow();
+            future.cancel(false);
             future = executor.submit(new BusinessActivityExecutor(bam, new HulkContext(BusinessActivityContextHolder.getContext(),
                                     RuntimeContextHolder.getContext())));
             result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
