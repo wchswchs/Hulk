@@ -63,11 +63,10 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
                 hulkContext.setBac(BusinessActivityContextHolder.getContext());
                 hulkContext.setRc(RuntimeContextHolder.getContext());
                 return JSONObject.toJSONString(hulkContext);
-            } else {
-                loggerExecutor.submit(new BusinessActivityLoggerThread(bam.getProperties(), bam.getDataSource(),
-                                    new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext())));
             }
 
+            loggerExecutor.submit(new BusinessActivityLoggerThread(bam.getProperties(), bam.getDataSource(),
+                                    new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext())));
             response = HulkResponseFactory.getResponse(result);
         } catch (TimeoutException ex) {
             RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_TIMEOUT.getCode(),
