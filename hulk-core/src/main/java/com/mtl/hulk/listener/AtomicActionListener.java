@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutorService;
 
 public class AtomicActionListener extends HulkListener {
 
-    private AtomicAction tryAction;
+    private volatile AtomicAction tryAction;
 
     private final Logger logger = LoggerFactory.getLogger(AtomicActionListener.class);
 
@@ -40,7 +40,7 @@ public class AtomicActionListener extends HulkListener {
                     if (applicationContext.getId().split(":")[0].equals(action.getServiceOperation().getService())) {
                         object = applicationContext.getBean(tryAction.getServiceOperation().getBeanClass());
                     } else {
-                        object = HulkResourceManager.getBam().getClients().get(action.getServiceOperation().getService());
+                        object = HulkResourceManager.getClients().get(action.getServiceOperation().getService());
                     }
                     logger.info("Transaction Executor running: {}", action.getServiceOperation().getName());
                     Method method = object.getClass().getMethod(action.getServiceOperation().getName(), BusinessActivityContext.class);

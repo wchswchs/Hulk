@@ -17,7 +17,7 @@ public class BusinessActivityLoggerExceptionThread extends AbstractHulk implemen
 
     private Logger logger = LoggerFactory.getLogger(BusinessActivityLoggerExceptionThread.class);
 
-    private BusinessActivityException ex;
+    private volatile BusinessActivityException ex;
     private HulkContext ctx;
 
     public BusinessActivityLoggerExceptionThread(HulkProperties properties, HulkContext ctx){
