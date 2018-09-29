@@ -3,7 +3,6 @@ package com.mtl.hulk.logger;
 import com.mtl.hulk.AbstractHulk;
 import com.mtl.hulk.BusinessActivityLogger;
 import com.mtl.hulk.BusinessActivityLoggerFactory;
-import com.mtl.hulk.HulkDataSource;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
 import com.mtl.hulk.context.HulkContext;

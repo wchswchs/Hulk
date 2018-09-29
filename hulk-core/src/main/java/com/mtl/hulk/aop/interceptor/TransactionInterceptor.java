@@ -5,7 +5,7 @@ import com.mtl.hulk.*;
 import com.mtl.hulk.annotation.MTLDTActivity;
 import com.mtl.hulk.annotation.MTLTwoPhaseAction;
 import com.mtl.hulk.aop.HulkAspectSupport;
-import com.mtl.hulk.bam.BusinessActivityManagerImpl;
+import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.*;
 import com.mtl.hulk.executor.BusinessActivityExecutor;
 import com.mtl.hulk.logger.BusinessActivityLoggerThread;
@@ -28,11 +28,11 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
 
     private final static Logger logger = LoggerFactory.getLogger(TransactionInterceptor.class);
 
-    private final ExecutorService transactionExecutor = Executors.newFixedThreadPool(bam.getProperties().getTransactionThreadPoolSize());
+    private final ExecutorService transactionExecutor = Executors.newFixedThreadPool(properties.getTransactionThreadPoolSize());
     private Future<Integer> future;
 
-    public TransactionInterceptor(BusinessActivityManagerImpl bam, ApplicationContext apc) {
-        super(bam, apc);
+    public TransactionInterceptor(HulkProperties properties, ApplicationContext apc) {
+        super(properties, apc);
     }
 
     @Override
@@ -46,12 +46,12 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
         HulkResponse response = null;
         boolean status = true;
         Integer result = 1;
-        ExecutorService loggerExecutor = bam.getLogExecutor();
+        ExecutorService loggerExecutor = HulkResourceManager.getBam().getLogExecutor();
         try {
-            status = bam.start(methodInvocation);
+            status = HulkResourceManager.getBam().start(methodInvocation);
             if (status) {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRIED);
-                future = transactionExecutor.submit(new BusinessActivityExecutor(bam, new HulkContext(BusinessActivityContextHolder.getContext(),
+                future = transactionExecutor.submit(new BusinessActivityExecutor(HulkResourceManager.getBam(), new HulkContext(BusinessActivityContextHolder.getContext(),
                                         RuntimeContextHolder.getContext())));
                 result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
             } else {
@@ -66,14 +66,14 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
                 return JSONObject.toJSONString(hulkContext);
             }
 
-            loggerExecutor.submit(new BusinessActivityLoggerThread(bam.getProperties(),
+            loggerExecutor.submit(new BusinessActivityLoggerThread(properties,
                                     new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext())));
             response = HulkResponseFactory.getResponse(result);
         } catch (TimeoutException ex) {
             RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_TIMEOUT.getCode(),
                     HulkErrorCode.COMMIT_TIMEOUT.getMessage()));
             destroyNow();
-            future = transactionExecutor.submit(new BusinessActivityExecutor(bam, new HulkContext(BusinessActivityContextHolder.getContext(),
+            future = transactionExecutor.submit(new BusinessActivityExecutor(HulkResourceManager.getBam(), new HulkContext(BusinessActivityContextHolder.getContext(),
                                     RuntimeContextHolder.getContext())));
             result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
             response = HulkResponseFactory.getResponse(result);
@@ -96,7 +96,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
 
     @Override
     public void destroyNow() {
-        bam.getListener().destroyNow();
+        HulkResourceManager.getBam().getListener().destroyNow();
         FutureUtil.cancelNow(future);
     }
 
@@ -120,7 +120,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
             id.setBusinessActivity(activityAnnotation.businessActivity());
             id.setBusinessDomain(activityAnnotation.businessDomain());
             id.setEntityId(activityAnnotation.entityId());
-            id.setSequence(String.valueOf(BusinessActivityIdSequenceFactory.getSequence(bam.getProperties().getTransIdSequence()).nextId()));
+            id.setSequence(String.valueOf(BusinessActivityIdSequenceFactory.getSequence(properties.getTransIdSequence()).nextId()));
             activity.setId(id);
             activity.setTimeout(activityAnnotation.timeout());
         }
