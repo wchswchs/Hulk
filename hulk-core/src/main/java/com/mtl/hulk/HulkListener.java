@@ -7,7 +7,7 @@ import org.springframework.context.ApplicationContext;
 public abstract class HulkListener extends AbstractHulk {
 
     protected BusinessActivityManagerImpl bam;
-    protected volatile AtomicAction action;
+    protected AtomicAction action;
 
     public HulkListener(AtomicAction action, ApplicationContext context) {
         super(context);
