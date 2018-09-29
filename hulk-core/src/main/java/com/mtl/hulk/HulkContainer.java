@@ -16,6 +16,7 @@ public class HulkContainer {
         for (HulkInterceptor interceptor : interceptors) {
             interceptor.destroy();
         }
+        datasource.destroy();
     }
 
     public static void setDatasource(HulkDataSource datasource) {
