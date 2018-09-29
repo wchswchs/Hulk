@@ -13,7 +13,7 @@
     <parent>
         <artifactId>hulk</artifactId>
         <groupId>com.mtl.hulk</groupId>
-        <version>1.0.2</version>
+        <version>1.0.1</version>
     </parent>
     <dependencies>
         <dependency>
@@ -33,7 +33,7 @@
         <dependency>
             <groupId>com.mtl.hulk</groupId>
             <artifactId>hulk-core</artifactId>
-            <version>1.0.2</version>
+            <version>1.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
