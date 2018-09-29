@@ -1,6 +1,5 @@
 package com.mtl.hulk.listener;
 
-import com.mtl.hulk.HulkDataSource;
 import com.mtl.hulk.HulkException;
 import com.mtl.hulk.HulkListener;
 import com.mtl.hulk.context.*;
@@ -18,12 +17,12 @@ import java.util.concurrent.ExecutorService;
 
 public class AtomicActionListener extends HulkListener {
 
-    private volatile AtomicAction tryAction;
+    private AtomicAction tryAction;
 
     private final Logger logger = LoggerFactory.getLogger(AtomicActionListener.class);
 
-    public AtomicActionListener(AtomicAction action, HulkDataSource ds, ApplicationContext applicationContext, AtomicAction tryAction) {
-        super(action, ds, applicationContext);
+    public AtomicActionListener(AtomicAction action, ApplicationContext applicationContext, AtomicAction tryAction) {
+        super(action, applicationContext);
         this.tryAction = tryAction;
     }
 
@@ -31,7 +30,7 @@ public class AtomicActionListener extends HulkListener {
     public boolean process() {
         if (action.getServiceOperation().getType() == ServiceOperationType.TCC) {
             BusinessActivityContext bac = BusinessActivityContextHolder.getContext();
-            bam.setRunFuture(bam.getRunFuture().thenApplyAsync(ctx -> {
+            bam.getListener().setRunFuture(bam.getListener().getRunFuture().thenApplyAsync(ctx -> {
                 if (ctx.getRc().getException() != null) {
                     return ctx;
                 }
@@ -84,7 +83,7 @@ public class AtomicActionListener extends HulkListener {
                     return ctx;
                 }
                 return ctx;
-            }, bam.getRunExecutor()));
+            }, bam.getListener().getRunExecutor()));
         }
         return true;
     }
@@ -94,10 +93,18 @@ public class AtomicActionListener extends HulkListener {
         BusinessActivityException bax = new BusinessActivityException();
         bax.setId(ctx.getRc().getActivity().getId());
         bax.setException(ex.getMessage());
-        BusinessActivityLoggerExceptionThread exceptionLogThread = new BusinessActivityLoggerExceptionThread(bam.getProperties(), bam.getDataSource(),
+        BusinessActivityLoggerExceptionThread exceptionLogThread = new BusinessActivityLoggerExceptionThread(bam.getProperties(),
                 new HulkContext(ctx.getBac(), ctx.getRc()));
         exceptionLogThread.setEx(bax);
         loggerExecutor.submit(exceptionLogThread);
+    }
+
+    @Override
+    public void destroy() {
+    }
+
+    @Override
+    public void destroyNow() {
     }
 
 }

@@ -10,10 +10,11 @@ public class BusinessActivityLoggerFactory {
 
     private final static Logger logger = LoggerFactory.getLogger(BusinessActivityLoggerFactory.class);
 
-    public static BusinessActivityLogger getStorage(HulkDataSource dataSource, HulkProperties properties){
+    public static BusinessActivityLogger getStorage(HulkProperties properties){
         try {
             if(StringUtils.equals("mysql", properties.getLoggerStorage())){
-                return new MySQLLoggerStorage(dataSource, (HulkSerializer) properties.getLogSerialize().newInstance());
+                return new MySQLLoggerStorage(HulkContainer.getDatasource(),
+                        (HulkSerializer) properties.getLogSerialize().newInstance());
             }
         } catch (InstantiationException initEx) {
             logger.error("New Serializer Instance Error", initEx);

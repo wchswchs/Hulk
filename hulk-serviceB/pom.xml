@@ -13,7 +13,7 @@
     <parent>
         <artifactId>hulk</artifactId>
         <groupId>com.mtl.hulk</groupId>
-        <version>1.0.1</version>
+        <version>1.0.2</version>
     </parent>
 
    <!-- <parent>
@@ -44,7 +44,7 @@
         <dependency>
             <groupId>com.mtl.hulk</groupId>
             <artifactId>hulk-core</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.2</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -61,24 +61,6 @@
             </exclusions>
         </dependency>
     </dependencies>
-    <!--<dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>Camden.SR7</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>1.4.6.RELEASE</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>-->
     <properties>
         <java.version>1.8</java.version>
     </properties>

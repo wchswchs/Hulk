@@ -9,25 +9,14 @@ public abstract class HulkListener extends AbstractHulk {
     protected BusinessActivityManagerImpl bam;
     protected volatile AtomicAction action;
 
-    public HulkListener(BusinessActivityManagerImpl bam, AtomicAction action, HulkDataSource ds, ApplicationContext applicationContext) {
-        super(ds, applicationContext);
+    public HulkListener(AtomicAction action, ApplicationContext context) {
+        super(context);
+        this.action = action;
+    }
+
+    public HulkListener(BusinessActivityManagerImpl bam, ApplicationContext apc) {
+        super(apc);
         this.bam = bam;
-        this.action = action;
-    }
-
-    public HulkListener(BusinessActivityManagerImpl bam, AtomicAction action, HulkDataSource ds) {
-        super(ds);
-        this.bam = bam;
-        this.action = action;
-    }
-
-    public HulkListener(AtomicAction action, HulkDataSource ds, ApplicationContext context) {
-        super(ds, context);
-        this.action = action;
-    }
-
-    public HulkListener(HulkDataSource ds) {
-        super(ds);
     }
 
     public void setBam(BusinessActivityManagerImpl bam) {

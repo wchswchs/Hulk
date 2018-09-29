@@ -21,8 +21,8 @@ public class BusinessActivityLoggerExceptionThread extends AbstractHulk implemen
     private BusinessActivityException ex;
     private HulkContext ctx;
 
-    public BusinessActivityLoggerExceptionThread(HulkProperties properties, HulkDataSource ds, HulkContext ctx){
-        super(properties, ds);
+    public BusinessActivityLoggerExceptionThread(HulkProperties properties, HulkContext ctx){
+        super(properties);
         this.ctx = ctx;
     }
 
@@ -31,7 +31,7 @@ public class BusinessActivityLoggerExceptionThread extends AbstractHulk implemen
         logger.info("Writing Exception log.");
         RuntimeContextHolder.setContext(ctx.getRc());
         BusinessActivityContextHolder.setContext(ctx.getBac());
-        BusinessActivityLogger bal = BusinessActivityLoggerFactory.getStorage(dataSource, properties);
+        BusinessActivityLogger bal = BusinessActivityLoggerFactory.getStorage(properties);
         if(null == bal) {
             logger.warn("businessActivityLogger获取为空，storage={}", properties.getLoggerStorage());
             return;
@@ -46,6 +46,14 @@ public class BusinessActivityLoggerExceptionThread extends AbstractHulk implemen
 
     public void setEx(BusinessActivityException ex) {
         this.ex = ex;
+    }
+
+    @Override
+    public void destroy() {
+    }
+
+    @Override
+    public void destroyNow() {
     }
 
 }
