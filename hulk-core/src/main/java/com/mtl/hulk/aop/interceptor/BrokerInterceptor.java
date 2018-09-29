@@ -4,8 +4,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.HulkException;
 import com.mtl.hulk.HulkInterceptor;
+import com.mtl.hulk.HulkResourceManager;
 import com.mtl.hulk.aop.HulkAspectSupport;
-import com.mtl.hulk.bam.BusinessActivityManagerImpl;
+import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.*;
 import com.mtl.hulk.message.HulkErrorCode;
 import com.mtl.hulk.util.ExecutorUtil;
@@ -26,14 +27,14 @@ public class BrokerInterceptor extends HulkAspectSupport implements HulkIntercep
 
     private static final Logger logger = LoggerFactory.getLogger(BrokerInterceptor.class);
 
-    private final ExecutorService tryExecutor = new ThreadPoolExecutor(bam.getProperties().getTrythreadPoolSize(),
+    private final ExecutorService tryExecutor = new ThreadPoolExecutor(properties.getTrythreadPoolSize(),
                             Integer.MAX_VALUE, 10L,
                             TimeUnit.SECONDS, new SynchronousQueue<>(),
                                     (new ThreadFactoryBuilder()).setNameFormat("Try-Thread-%d").build());
     private static List<String> orders;
 
-    public BrokerInterceptor(BusinessActivityManagerImpl bam) {
-        super(bam, null);
+    public BrokerInterceptor(HulkProperties properties) {
+        super(properties);
     }
 
     @Override
@@ -41,7 +42,7 @@ public class BrokerInterceptor extends HulkAspectSupport implements HulkIntercep
         if (!orders.contains(methodInvocation.getMethod().getName())) {
             orders.add(methodInvocation.getMethod().getName());
         }
-        bam.setTryFuture(bam.getTryFuture().thenApplyAsync(am -> {
+        HulkResourceManager.getBam().setTryFuture(HulkResourceManager.getBam().getTryFuture().thenApplyAsync(am -> {
             try {
                 String name = methodInvocation.getMethod().getName();
                 logger.info("Try request sending: {}", name);

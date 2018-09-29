@@ -27,16 +27,16 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
 
     private final Logger logger = LoggerFactory.getLogger(BusinessActivityManagerImpl.class);
 
-    private BusinessActivityListener listener;
+    private final BusinessActivityListener listener;
     private CompletableFuture<Map<Integer, HulkContext>> tryFuture;
-    private final ExecutorService logExecutor = new ThreadPoolExecutor(getProperties().getLogThreadPoolSize(),
+    private final ExecutorService logExecutor = new ThreadPoolExecutor(properties.getLogThreadPoolSize(),
                                         Integer.MAX_VALUE, 5L,
                                         TimeUnit.SECONDS, new SynchronousQueue<>(),
                                         (new ThreadFactoryBuilder()).setNameFormat("Hulk-Log-Thread-%d").build());
 
     public BusinessActivityManagerImpl(HulkProperties properties, ApplicationContext applicationContext) {
         super(properties, applicationContext);
-        this.listener = new BusinessActivityListener(this, applicationContext);
+        this.listener = new BusinessActivityListener(properties, applicationContext);
     }
 
     @Override
@@ -78,18 +78,12 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
 
     @Override
     public boolean commit() {
-        if (listener.getBam() == null) {
-            listener.setBam(this);
-        }
         RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITTING);
         return listener.process();
     }
 
     @Override
     public boolean rollback() {
-        if (listener.getBam() == null) {
-            listener.setBam(this);
-        }
         RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKING);
         return listener.process();
     }

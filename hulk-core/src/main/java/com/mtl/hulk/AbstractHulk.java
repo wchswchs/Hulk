@@ -32,6 +32,10 @@ public abstract class AbstractHulk implements Resource {
         this.applicationContext = applicationContext;
     }
 
+    public void setProperties(HulkProperties properties) {
+        this.properties = properties;
+    }
+
     public Map<String, Object> getClients() {
         return clients;
     }

@@ -32,6 +32,7 @@
   <version>${hulk.version}</version>
 </dependency>
 ```
+当前版本：1.0.1
 
 #### 工程属性配置
 

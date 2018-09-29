@@ -1,7 +1,7 @@
 package com.mtl.hulk.configuration;
 
-import com.mtl.hulk.HulkContainer;
 import com.mtl.hulk.HulkDataSource;
+import com.mtl.hulk.HulkShutdownHook;
 import com.mtl.hulk.aop.BeanFactoryHulkAdvisor;
 import com.mtl.hulk.aop.interceptor.BrokerInterceptor;
 import com.mtl.hulk.aop.interceptor.TransactionInterceptor;
@@ -11,7 +11,6 @@ import com.mtl.hulk.bam.BusinessActivityManagerImpl;
 import com.mtl.hulk.logger.data.sql.SQLDataSource;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
@@ -19,7 +18,6 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextClosedEvent;
-import org.springframework.context.event.ContextRefreshedEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,11 +32,6 @@ public class HulkConfiguration {
     public HulkConfiguration(HulkProperties properties, ApplicationContext applicationContext) {
         this.properties = properties;
         this.applicationContext = applicationContext;
-    }
-
-    @Bean
-    public BusinessActivityManagerImpl bam() {
-        return new BusinessActivityManagerImpl(properties, applicationContext);
     }
 
     @Bean
@@ -57,12 +50,17 @@ public class HulkConfiguration {
 
     @Bean
     public TransactionInterceptor hulkTransactionInterceptor() {
-        return new TransactionInterceptor(bam(), applicationContext);
+        return new TransactionInterceptor(properties, applicationContext);
     }
 
     @Bean
     public BrokerInterceptor hulkBrokerInterceptor() {
-        return new BrokerInterceptor(bam());
+        return new BrokerInterceptor(properties);
+    }
+
+    @Bean
+    public BusinessActivityManagerImpl bam() {
+        return new BusinessActivityManagerImpl(properties, applicationContext);
     }
 
     @Bean
@@ -91,24 +89,10 @@ public class HulkConfiguration {
 
     private static class HulkApplicationListener implements ApplicationListener<ApplicationEvent> {
 
-        @Autowired
-        private BusinessActivityManagerImpl bam;
-        @Autowired
-        private TransactionInterceptor hulkTransactionInterceptor;
-        @Autowired
-        private BrokerInterceptor hulkBrokerInterceptor;
-        @Autowired
-        private HulkDataSource hulkDataSource;
-
         @Override
         public void onApplicationEvent(ApplicationEvent event) {
-            if (event instanceof ContextRefreshedEvent) {
-                HulkContainer.setDatasource(hulkDataSource);
-                HulkContainer.getInterceptors().add(hulkBrokerInterceptor);
-                HulkContainer.getInterceptors().add(hulkTransactionInterceptor);
-            } else if (event instanceof ContextClosedEvent) {
-                HulkContainer.destroy();
-                bam.destroy();
+            if (event instanceof ContextClosedEvent) {
+                HulkShutdownHook.getHulkShutdownHook().destroyAll();
             }
         }
 

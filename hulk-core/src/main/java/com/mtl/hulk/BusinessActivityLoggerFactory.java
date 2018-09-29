@@ -13,7 +13,7 @@ public class BusinessActivityLoggerFactory {
     public static BusinessActivityLogger getStorage(HulkProperties properties){
         try {
             if(StringUtils.equals("mysql", properties.getLoggerStorage())){
-                return new MySQLLoggerStorage(HulkContainer.getDatasource(),
+                return new MySQLLoggerStorage(HulkResourceManager.getDatasource(),
                         (HulkSerializer) properties.getLogSerialize().newInstance());
             }
         } catch (InstantiationException initEx) {
