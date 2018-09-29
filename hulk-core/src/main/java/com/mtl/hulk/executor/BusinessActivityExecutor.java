@@ -65,4 +65,12 @@ public class BusinessActivityExecutor extends AbstractHulk implements Callable<I
         return BooleanUtils.toInteger(status);
     }
 
+    @Override
+    public void destroy() {
+    }
+
+    @Override
+    public void destroyNow() {
+    }
+
 }

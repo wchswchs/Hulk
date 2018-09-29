@@ -1,6 +1,6 @@
 package com.mtl.hulk.configuration;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.mtl.hulk.HulkContainer;
 import com.mtl.hulk.HulkDataSource;
 import com.mtl.hulk.aop.BeanFactoryHulkAdvisor;
 import com.mtl.hulk.aop.interceptor.BrokerInterceptor;
@@ -23,7 +23,6 @@ import org.springframework.context.event.ContextRefreshedEvent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
 
 @Configuration
 @EnableConfigurationProperties(HulkProperties.class)
@@ -39,7 +38,7 @@ public class HulkConfiguration {
 
     @Bean
     public BusinessActivityManagerImpl bam() {
-        return new BusinessActivityManagerImpl(properties, hulkDataSource(), applicationContext);
+        return new BusinessActivityManagerImpl(properties, applicationContext);
     }
 
     @Bean
@@ -58,7 +57,7 @@ public class HulkConfiguration {
 
     @Bean
     public TransactionInterceptor hulkTransactionInterceptor() {
-        return new TransactionInterceptor(bam());
+        return new TransactionInterceptor(bam(), applicationContext);
     }
 
     @Bean
@@ -94,23 +93,22 @@ public class HulkConfiguration {
 
         @Autowired
         private BusinessActivityManagerImpl bam;
+        @Autowired
+        private TransactionInterceptor hulkTransactionInterceptor;
+        @Autowired
+        private BrokerInterceptor hulkBrokerInterceptor;
+        @Autowired
+        private HulkDataSource hulkDataSource;
 
         @Override
         public void onApplicationEvent(ApplicationEvent event) {
             if (event instanceof ContextRefreshedEvent) {
-                bam.setTransactionExecutor(Executors.newFixedThreadPool(bam.getProperties().getTransactionThreadPoolSize()));
-                bam.setLogExecutor(new ThreadPoolExecutor(bam.getProperties().getLogThreadPoolSize(),
-                        Integer.MAX_VALUE, 5L,
-                        TimeUnit.SECONDS, new SynchronousQueue<>(),
-                        (new ThreadFactoryBuilder()).setNameFormat("Hulk-Log-Thread-%d").build()));
-                bam.setTryExecutor(new ThreadPoolExecutor(bam.getProperties().getTrythreadPoolSize(),
-                        Integer.MAX_VALUE, 10L,
-                        TimeUnit.SECONDS, new SynchronousQueue<>(),
-                        (new ThreadFactoryBuilder()).setNameFormat("Try-Thread-%d").build()));
+                HulkContainer.setDatasource(hulkDataSource);
+                HulkContainer.getInterceptors().add(hulkBrokerInterceptor);
+                HulkContainer.getInterceptors().add(hulkTransactionInterceptor);
             } else if (event instanceof ContextClosedEvent) {
-                bam.getTransactionExecutor().shutdown();
-                bam.getLogExecutor().shutdown();
-                bam.getTryExecutor().shutdown();
+                HulkContainer.destroy();
+                bam.destroy();
             }
         }
 

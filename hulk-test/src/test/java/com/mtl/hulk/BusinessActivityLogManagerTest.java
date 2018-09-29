@@ -66,7 +66,7 @@ public class BusinessActivityLogManagerTest extends AbstractHulkTest {
 
         RuntimeContext context = new RuntimeContext();
         context.setActivity(activity);
-        BusinessActivityLogger logger = BusinessActivityLoggerFactory.getStorage(hulkDataSource, properties);
+        BusinessActivityLogger logger = BusinessActivityLoggerFactory.getStorage(properties);
         BusinessActivityContext businessActivityContext = new BusinessActivityContext();
         Map<String, Object[]> params = new ConcurrentHashMap<String, Object[]>();
         Object[] objects1 = {"wust_zdy", "hust_zdy"};
@@ -79,7 +79,7 @@ public class BusinessActivityLogManagerTest extends AbstractHulkTest {
 
     @Test
     public void testBusinessActivityExceptionLogCreate() throws SQLException {
-        BusinessActivityLogger logger = BusinessActivityLoggerFactory.getStorage(hulkDataSource, properties);
+        BusinessActivityLogger logger = BusinessActivityLoggerFactory.getStorage(properties);
         BusinessActivityException ex = new BusinessActivityException();
         BusinessActivityId businessActivityId = new BusinessActivityId();
         businessActivityId.setBusinessDomain("ceshi1");
@@ -92,7 +92,7 @@ public class BusinessActivityLogManagerTest extends AbstractHulkTest {
 
     @Test
     public void testBusinessActivityLogRemove() throws SQLException {
-        BusinessActivityLogger logger = BusinessActivityLoggerFactory.getStorage(hulkDataSource, properties);
+        BusinessActivityLogger logger = BusinessActivityLoggerFactory.getStorage(properties);
         List<String> BusinessActivityIdStr = new ArrayList<>();
         BusinessActivityId businessActivityId = new BusinessActivityId();
         businessActivityId.setBusinessDomain("ceshi2");
@@ -104,14 +104,14 @@ public class BusinessActivityLogManagerTest extends AbstractHulkTest {
 
     @Test
     public void testFindBusinessActivityLog() throws SQLException {
-        BusinessActivityLogger logger = BusinessActivityLoggerFactory.getStorage(hulkDataSource, properties);
+        BusinessActivityLogger logger = BusinessActivityLoggerFactory.getStorage(properties);
         List<HulkTransactionActivity> hulkTransactionActivityList = logger.read(10);
         System.out.println(hulkTransactionActivityList);
     }
 
     @Test
     public void getTranactionBusinessActivityList() {
-        BusinessActivityLogger logger = BusinessActivityLoggerFactory.getStorage(hulkDataSource, properties);
+        BusinessActivityLogger logger = BusinessActivityLoggerFactory.getStorage(properties);
         BusinessActivityId businessActivityId = new BusinessActivityId();
         businessActivityId.setSequence("1013652504641536");
         businessActivityId.setBusinessDomain("mtl");
@@ -125,7 +125,7 @@ public class BusinessActivityLogManagerTest extends AbstractHulkTest {
     public void updateBusinessActivityStateTest() throws SQLException {
         String businessActivityId = "1013652504641536_mtl_test_a";
         BusinessActivity activity = new BusinessActivity();
-        BusinessActivityLogger logger = BusinessActivityLoggerFactory.getStorage(hulkDataSource, properties);
+        BusinessActivityLogger logger = BusinessActivityLoggerFactory.getStorage(properties);
         int count = logger.updateBusinessActivityState(businessActivityId, activity.getStatus());
         Assert.assertTrue(count == 2);
     }

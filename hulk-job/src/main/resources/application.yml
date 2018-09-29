@@ -8,4 +8,4 @@ eureka:
     serviceUrl:
       defaultZone: ${eureka.serviceUrl.defaultZone}
 logging:
-  config: /opt/logconfig/hulk-logback.xml
+  config: /apps/config/logconfig/hulk-job-logback.xml

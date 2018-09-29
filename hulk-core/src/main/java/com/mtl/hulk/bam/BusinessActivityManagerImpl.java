@@ -1,7 +1,7 @@
 package com.mtl.hulk.bam;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.AbstractHulk;
-import com.mtl.hulk.HulkDataSource;
 import com.mtl.hulk.HulkException;
 import com.mtl.hulk.aop.interceptor.BrokerInterceptor;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
@@ -9,9 +9,10 @@ import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.listener.BusinessActivityListener;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.message.HulkErrorCode;
-import com.mtl.hulk.model.AtomicAction;
 import com.mtl.hulk.model.BusinessActivityStatus;
 import com.mtl.hulk.context.RuntimeContextHolder;
+import com.mtl.hulk.util.ExecutorUtil;
+import com.mtl.hulk.util.FutureUtil;
 import org.aopalliance.intercept.MethodInvocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,25 +28,27 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
     private final Logger logger = LoggerFactory.getLogger(BusinessActivityManagerImpl.class);
 
     private BusinessActivityListener listener;
-    private Map<String, Object> clients = new ConcurrentHashMap<String, Object>();
+    private CompletableFuture<Map<Integer, HulkContext>> tryFuture;
+    private final ExecutorService logExecutor = new ThreadPoolExecutor(getProperties().getLogThreadPoolSize(),
+                                        Integer.MAX_VALUE, 5L,
+                                        TimeUnit.SECONDS, new SynchronousQueue<>(),
+                                        (new ThreadFactoryBuilder()).setNameFormat("Hulk-Log-Thread-%d").build());
 
-    public BusinessActivityManagerImpl(HulkProperties properties, HulkDataSource ds, ApplicationContext applicationContext) {
-        super(properties, ds, applicationContext);
-        this.listener = new BusinessActivityListener(ds);
+    public BusinessActivityManagerImpl(HulkProperties properties, ApplicationContext applicationContext) {
+        super(properties, applicationContext);
+        this.listener = new BusinessActivityListener(this, applicationContext);
     }
 
     @Override
     public boolean start(MethodInvocation methodInvocation) {
-        listener.setBam(this);
-        ExecutorService tryExecutor = getTryExecutor();
-        setFuture(CompletableFuture.completedFuture(
-                new ConcurrentHashMap<Integer, HulkContext>()));
+        tryFuture = CompletableFuture.completedFuture(
+                new ConcurrentHashMap<Integer, HulkContext>());
         boolean status = false;
         try {
             BrokerInterceptor.setOrders(new CopyOnWriteArrayList<>());
             Object result = methodInvocation.proceed();
             if (RuntimeContextHolder.getContext().getActivity().getId() != null) {
-                Map<Integer, HulkContext> hc = getFuture().join();
+                Map<Integer, HulkContext> hc = tryFuture.join();
                 if (hc != null && hc.size() > 0
                         && BrokerInterceptor.getOrders() != null
                         && BrokerInterceptor.getOrders().size() > 0) {
@@ -69,13 +72,6 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
                     MessageFormat.format(HulkErrorCode.TRY_FAIL.getMessage(),
                             RuntimeContextHolder.getContext().getActivity().getId().formatString(), methodInvocation.getMethod().getName())));
             logger.error("Hulk Try Exception", ex);
-        } finally {
-            if (getFuture() != null) {
-                if (getFuture().isCompletedExceptionally() ||
-                        getFuture().isDone()) {
-                    getFuture().cancel(false);
-                }
-            }
         }
         return status;
     }
@@ -98,16 +94,6 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
         return listener.process();
     }
 
-    @Override
-    public List<AtomicAction> enlistAction(AtomicAction action, List<AtomicAction> actions) {
-        return null;
-    }
-
-    @Override
-    public boolean delistAction() {
-        return true;
-    }
-
     public BusinessActivityListener getListener() {
         return listener;
     }
@@ -116,8 +102,30 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
         return properties;
     }
 
-    public Map<String, Object> getClients() {
-        return clients;
+    public CompletableFuture<Map<Integer, HulkContext>> getTryFuture() {
+        return tryFuture;
+    }
+
+    public void setTryFuture(CompletableFuture<Map<Integer, HulkContext>> tryFuture) {
+        this.tryFuture = tryFuture;
+    }
+
+    public ExecutorService getLogExecutor() {
+        return logExecutor;
+    }
+
+    @Override
+    public void destroy() {
+        listener.destroy();
+        FutureUtil.gracefulCancel(tryFuture);
+        ExecutorUtil.gracefulShutdown(logExecutor);
+        ExecutorUtil.shutdownNow(listener.getRunExecutor());
+    }
+
+    @Override
+    public void destroyNow() {
+        listener.destroyNow();
+        ExecutorUtil.shutdownNow(listener.getRunExecutor());
     }
 
 }

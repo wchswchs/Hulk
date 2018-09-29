@@ -11,9 +11,10 @@ import java.util.List;
 public abstract class BusinessActivityLogger extends AbstractHulk {
 
     protected final HulkSerializer serializer;
+    protected HulkDataSource dataSource;
 
     public BusinessActivityLogger(HulkDataSource ds, HulkSerializer serializer) {
-        super(ds);
+        this.dataSource = ds;
         this.serializer = serializer;
     }
 
@@ -52,6 +53,14 @@ public abstract class BusinessActivityLogger extends AbstractHulk {
         businessActivityId.setEntityId(StringUtils.isBlank(businessActivityIdStrs[3]) ? null : businessActivityIdStrs[3]);
 
         return businessActivityId;
+    }
+
+    public void setDataSource(HulkDataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    public HulkDataSource getDataSource() {
+        return dataSource;
     }
 
 }

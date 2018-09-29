@@ -1,10 +1,7 @@
 package com.mtl.hulk.aop.interceptor;
 
 import com.alibaba.fastjson.JSONObject;
-import com.mtl.hulk.BusinessActivityIdSequenceFactory;
-import com.mtl.hulk.HulkException;
-import com.mtl.hulk.HulkResponse;
-import com.mtl.hulk.HulkResponseFactory;
+import com.mtl.hulk.*;
 import com.mtl.hulk.annotation.MTLDTActivity;
 import com.mtl.hulk.annotation.MTLTwoPhaseAction;
 import com.mtl.hulk.aop.HulkAspectSupport;
@@ -14,22 +11,28 @@ import com.mtl.hulk.executor.BusinessActivityExecutor;
 import com.mtl.hulk.logger.BusinessActivityLoggerThread;
 import com.mtl.hulk.message.HulkErrorCode;
 import com.mtl.hulk.model.*;
+import com.mtl.hulk.util.ExecutorUtil;
+import com.mtl.hulk.util.FutureUtil;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 
 import java.io.Serializable;
 import java.util.concurrent.*;
 
-public class TransactionInterceptor extends HulkAspectSupport implements MethodInterceptor, Serializable {
+public class TransactionInterceptor extends HulkAspectSupport implements HulkInterceptor, MethodInterceptor, Serializable {
 
     private final static Logger logger = LoggerFactory.getLogger(TransactionInterceptor.class);
 
-    public TransactionInterceptor(BusinessActivityManagerImpl bam) {
-        super(bam);
+    private final ExecutorService transactionExecutor = Executors.newFixedThreadPool(bam.getProperties().getTransactionThreadPoolSize());
+    private Future<Integer> future;
+
+    public TransactionInterceptor(BusinessActivityManagerImpl bam, ApplicationContext apc) {
+        super(bam, apc);
     }
 
     @Override
@@ -42,15 +45,13 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
 
         HulkResponse response = null;
         boolean status = true;
-        Future<Integer> future = null;
-        ExecutorService executor = bam.getTransactionExecutor();
         Integer result = 1;
         ExecutorService loggerExecutor = bam.getLogExecutor();
         try {
             status = bam.start(methodInvocation);
             if (status) {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRIED);
-                future = executor.submit(new BusinessActivityExecutor(bam, new HulkContext(BusinessActivityContextHolder.getContext(),
+                future = transactionExecutor.submit(new BusinessActivityExecutor(bam, new HulkContext(BusinessActivityContextHolder.getContext(),
                                         RuntimeContextHolder.getContext())));
                 result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
             } else {
@@ -63,19 +64,16 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
                 hulkContext.setBac(BusinessActivityContextHolder.getContext());
                 hulkContext.setRc(RuntimeContextHolder.getContext());
                 return JSONObject.toJSONString(hulkContext);
-            } else {
-                loggerExecutor.submit(new BusinessActivityLoggerThread(bam.getProperties(), bam.getDataSource(),
-                                    new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext())));
             }
 
+            loggerExecutor.submit(new BusinessActivityLoggerThread(bam.getProperties(),
+                                    new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext())));
             response = HulkResponseFactory.getResponse(result);
         } catch (TimeoutException ex) {
             RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_TIMEOUT.getCode(),
                     HulkErrorCode.COMMIT_TIMEOUT.getMessage()));
-            bam.getRunFuture().cancel(true);
-            bam.getRunExecutor().shutdownNow();
-            future.cancel(false);
-            future = executor.submit(new BusinessActivityExecutor(bam, new HulkContext(BusinessActivityContextHolder.getContext(),
+            destroyNow();
+            future = transactionExecutor.submit(new BusinessActivityExecutor(bam, new HulkContext(BusinessActivityContextHolder.getContext(),
                                     RuntimeContextHolder.getContext())));
             result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
             response = HulkResponseFactory.getResponse(result);
@@ -86,13 +84,20 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
         } finally {
             BusinessActivityContextHolder.clearContext();
             RuntimeContextHolder.clearContext();
-            if (context.getActivity().getId() != null) {
-                if (future != null) {
-                    future.cancel(false);
-                }
-            }
         }
         return JSONObject.toJSONString(response);
+    }
+
+    @Override
+    public void destroy() {
+        FutureUtil.gracefulCancel(future);
+        ExecutorUtil.gracefulShutdown(transactionExecutor);
+    }
+
+    @Override
+    public void destroyNow() {
+        bam.getListener().destroyNow();
+        FutureUtil.cancelNow(future);
     }
 
     private boolean prepareContext(MethodInvocation methodInvocation) {
@@ -133,7 +138,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
         AtomicAction confirmAction = new AtomicAction();
         ServiceOperation confirmServiceOperation = new ServiceOperation();
         confirmServiceOperation.setName(transaction.confirmMethod());
-        confirmServiceOperation.setService(bam.getApplicationContext().getId().split(":")[0]);
+        confirmServiceOperation.setService(applicationContext.getId().split(":")[0]);
         confirmServiceOperation.setType(ServiceOperationType.TCC);
         confirmAction.setServiceOperation(confirmServiceOperation);
         confirmAction.setCallType(transaction.callType());
@@ -142,7 +147,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements MethodI
         AtomicAction cancelAction = new AtomicAction();
         ServiceOperation cancelServiceOperation = new ServiceOperation();
         cancelServiceOperation.setName(transaction.cancelMethod());
-        cancelServiceOperation.setService(bam.getApplicationContext().getId().split(":")[0]);
+        cancelServiceOperation.setService(applicationContext.getId().split(":")[0]);
         cancelServiceOperation.setType(ServiceOperationType.TCC);
         cancelAction.setServiceOperation(cancelServiceOperation);
         cancelAction.setCallType(transaction.callType());
