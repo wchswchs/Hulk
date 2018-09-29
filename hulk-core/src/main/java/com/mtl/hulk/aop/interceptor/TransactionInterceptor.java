@@ -51,7 +51,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
             status = HulkResourceManager.getBam().start(methodInvocation);
             if (status) {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRIED);
-                future = transactionExecutor.submit(new BusinessActivityExecutor(HulkResourceManager.getBam(), new HulkContext(BusinessActivityContextHolder.getContext(),
+                future = transactionExecutor.submit(new BusinessActivityExecutor(new HulkContext(BusinessActivityContextHolder.getContext(),
                                         RuntimeContextHolder.getContext())));
                 result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
             } else {
@@ -73,7 +73,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
             RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_TIMEOUT.getCode(),
                     HulkErrorCode.COMMIT_TIMEOUT.getMessage()));
             destroyNow();
-            future = transactionExecutor.submit(new BusinessActivityExecutor(HulkResourceManager.getBam(), new HulkContext(BusinessActivityContextHolder.getContext(),
+            future = transactionExecutor.submit(new BusinessActivityExecutor(new HulkContext(BusinessActivityContextHolder.getContext(),
                                     RuntimeContextHolder.getContext())));
             result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
             response = HulkResponseFactory.getResponse(result);

@@ -2,7 +2,7 @@ package com.mtl.hulk.listener;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.HulkListener;
-import com.mtl.hulk.bam.BusinessActivityManagerImpl;
+import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
 import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.model.AtomicAction;
@@ -21,14 +21,14 @@ public class BusinessActivityListener extends HulkListener {
 
     private final Logger logger = LoggerFactory.getLogger(BusinessActivityListener.class);
 
-    private final ExecutorService runExecutor = new ThreadPoolExecutor(bam.getProperties().getActionthreadPoolSize(),
+    private final ExecutorService runExecutor = new ThreadPoolExecutor(properties.getActionthreadPoolSize(),
                                                 Integer.MAX_VALUE, 10L,
                                                 TimeUnit.SECONDS, new SynchronousQueue<>(),
                                                 (new ThreadFactoryBuilder()).setNameFormat("Run-Thread-%d").build());
     private CompletableFuture<HulkContext> runFuture;
 
-    public BusinessActivityListener(BusinessActivityManagerImpl bam, ApplicationContext apc) {
-        super(bam, apc);
+    public BusinessActivityListener(HulkProperties properties, ApplicationContext apc) {
+        super(properties, apc);
     }
 
     @Override
@@ -47,7 +47,7 @@ public class BusinessActivityListener extends HulkListener {
         for (int i = 0; i < context.getActivity().getAtomicTryActions().size(); i ++) {
             AtomicActionListener listener = new AtomicActionListener(currentActions.get(i), applicationContext,
                                             context.getActivity().getAtomicTryActions().get(i));
-            listener.setBam(bam);
+            listener.setProperties(properties);
             listener.setApplicationContext(applicationContext);
             boolean status = listener.process();
             if (status == false) {

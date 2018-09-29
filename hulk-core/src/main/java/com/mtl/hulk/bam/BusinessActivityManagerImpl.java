@@ -36,7 +36,7 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
 
     public BusinessActivityManagerImpl(HulkProperties properties, ApplicationContext applicationContext) {
         super(properties, applicationContext);
-        this.listener = new BusinessActivityListener(this, applicationContext);
+        this.listener = new BusinessActivityListener(properties, applicationContext);
     }
 
     @Override
@@ -78,18 +78,12 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
 
     @Override
     public boolean commit() {
-        if (listener.getBam() == null) {
-            listener.setBam(this);
-        }
         RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITTING);
         return listener.process();
     }
 
     @Override
     public boolean rollback() {
-        if (listener.getBam() == null) {
-            listener.setBam(this);
-        }
         RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKING);
         return listener.process();
     }

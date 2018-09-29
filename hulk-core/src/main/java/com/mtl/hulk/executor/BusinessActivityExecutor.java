@@ -1,7 +1,7 @@
 package com.mtl.hulk.executor;
 
 import com.mtl.hulk.AbstractHulk;
-import com.mtl.hulk.bam.BusinessActivityManagerImpl;
+import com.mtl.hulk.HulkResourceManager;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
 import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.context.RuntimeContextHolder;
@@ -13,11 +13,9 @@ import java.util.concurrent.Callable;
 
 public class BusinessActivityExecutor extends AbstractHulk implements Callable<Integer> {
 
-    private BusinessActivityManagerImpl bam;
     private HulkContext ctx;
 
-    public BusinessActivityExecutor(BusinessActivityManagerImpl bam, HulkContext ctx) {
-        this.bam = bam;
+    public BusinessActivityExecutor(HulkContext ctx) {
         this.ctx = ctx;
     }
 
@@ -28,7 +26,7 @@ public class BusinessActivityExecutor extends AbstractHulk implements Callable<I
         boolean status = false;
         if (RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.TRIED) {
             RuntimeContextHolder.getContext().setException(null);
-            status = bam.commit();
+            status = HulkResourceManager.getBam().commit();
             if (RuntimeContextHolder.getContext()
                     .getException() != null && RuntimeContextHolder.getContext()
                     .getException().getCode() == HulkErrorCode.INTERRUPTED.getCode()) {
@@ -38,7 +36,7 @@ public class BusinessActivityExecutor extends AbstractHulk implements Callable<I
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITTED);
             } else {
                 RuntimeContextHolder.getContext().setException(null);
-                status = bam.rollback();
+                status = HulkResourceManager.getBam().rollback();
                 if (RuntimeContextHolder.getContext().getException() != null &&
                         RuntimeContextHolder.getContext().getException().getCode() == HulkErrorCode.INTERRUPTED.getCode()) {
                     return BooleanUtils.toInteger(status);
@@ -51,7 +49,7 @@ public class BusinessActivityExecutor extends AbstractHulk implements Callable<I
             }
         } else {
             RuntimeContextHolder.getContext().setException(null);
-            status = bam.rollback();
+            status = HulkResourceManager.getBam().rollback();
             if (RuntimeContextHolder.getContext().getException() != null &&
                     RuntimeContextHolder.getContext().getException().getCode() == HulkErrorCode.INTERRUPTED.getCode()) {
                 return BooleanUtils.toInteger(status);

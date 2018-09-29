@@ -2,6 +2,7 @@ package com.mtl.hulk.listener;
 
 import com.mtl.hulk.HulkException;
 import com.mtl.hulk.HulkListener;
+import com.mtl.hulk.HulkResourceManager;
 import com.mtl.hulk.context.*;
 import com.mtl.hulk.logger.BusinessActivityLoggerExceptionThread;
 import com.mtl.hulk.message.HulkErrorCode;
@@ -30,7 +31,7 @@ public class AtomicActionListener extends HulkListener {
     public boolean process() {
         if (action.getServiceOperation().getType() == ServiceOperationType.TCC) {
             BusinessActivityContext bac = BusinessActivityContextHolder.getContext();
-            bam.getListener().setRunFuture(bam.getListener().getRunFuture().thenApplyAsync(ctx -> {
+            HulkResourceManager.getBam().getListener().setRunFuture(HulkResourceManager.getBam().getListener().getRunFuture().thenApplyAsync(ctx -> {
                 if (ctx.getRc().getException() != null) {
                     return ctx;
                 }
@@ -39,7 +40,7 @@ public class AtomicActionListener extends HulkListener {
                     if (applicationContext.getId().split(":")[0].equals(action.getServiceOperation().getService())) {
                         object = applicationContext.getBean(tryAction.getServiceOperation().getBeanClass());
                     } else {
-                        object = bam.getClients().get(action.getServiceOperation().getService());
+                        object = HulkResourceManager.getBam().getClients().get(action.getServiceOperation().getService());
                     }
                     logger.info("Transaction Executor running: {}", action.getServiceOperation().getName());
                     Method method = object.getClass().getMethod(action.getServiceOperation().getName(), BusinessActivityContext.class);
@@ -83,17 +84,17 @@ public class AtomicActionListener extends HulkListener {
                     return ctx;
                 }
                 return ctx;
-            }, bam.getListener().getRunExecutor()));
+            }, HulkResourceManager.getBam().getListener().getRunExecutor()));
         }
         return true;
     }
 
     private void writeException(Exception ex, HulkContext ctx) {
-        ExecutorService loggerExecutor = bam.getLogExecutor();
+        ExecutorService loggerExecutor = HulkResourceManager.getBam().getLogExecutor();
         BusinessActivityException bax = new BusinessActivityException();
         bax.setId(ctx.getRc().getActivity().getId());
         bax.setException(ex.getMessage());
-        BusinessActivityLoggerExceptionThread exceptionLogThread = new BusinessActivityLoggerExceptionThread(bam.getProperties(),
+        BusinessActivityLoggerExceptionThread exceptionLogThread = new BusinessActivityLoggerExceptionThread(properties,
                 new HulkContext(ctx.getBac(), ctx.getRc()));
         exceptionLogThread.setEx(bax);
         loggerExecutor.submit(exceptionLogThread);
