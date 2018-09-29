@@ -21,7 +21,7 @@ public class BusinessActivityListener extends HulkListener {
 
     private final Logger logger = LoggerFactory.getLogger(BusinessActivityListener.class);
 
-    private final ExecutorService runExecutor = new ThreadPoolExecutor(bam.getProperties().getRunthreadPoolSize(),
+    private final ExecutorService runExecutor = new ThreadPoolExecutor(bam.getProperties().getActionthreadPoolSize(),
                                                 Integer.MAX_VALUE, 10L,
                                                 TimeUnit.SECONDS, new SynchronousQueue<>(),
                                                 (new ThreadFactoryBuilder()).setNameFormat("Run-Thread-%d").build());

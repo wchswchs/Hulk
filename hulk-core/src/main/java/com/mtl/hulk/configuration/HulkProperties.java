@@ -15,8 +15,8 @@ public class HulkProperties {
     private int recoverySize = 20;
     private int logThreadPoolSize = 100;
     private int transactionThreadPoolSize = 200;
-    private int trythreadPoolSize = 200;
-    private int runthreadPoolSize = 200;
+    private int tryThreadPoolSize = 200;
+    private int actionThreadPoolSize = 200;
     private Class<?> logSerialize = KryoSerializer.class;
     private String transIdSequence = "timestamp";
     private int retryTranactionCount = 3;
@@ -93,20 +93,20 @@ public class HulkProperties {
         return transactionThreadPoolSize;
     }
 
-    public void setTrythreadPoolSize(int tryhreadPoolSize) {
-        this.trythreadPoolSize = tryhreadPoolSize;
+    public void setTryThreadPoolSize(int tryhreadPoolSize) {
+        this.tryThreadPoolSize = tryhreadPoolSize;
     }
 
     public int getTrythreadPoolSize() {
-        return trythreadPoolSize;
+        return tryThreadPoolSize;
     }
 
-    public void setRunthreadPoolSize(int runthreadPoolSize) {
-        this.runthreadPoolSize = runthreadPoolSize;
+    public void setActionthreadPoolSize(int actionThreadPoolSize) {
+        this.actionThreadPoolSize = actionThreadPoolSize;
     }
 
-    public int getRunthreadPoolSize() {
-        return runthreadPoolSize;
+    public int getActionthreadPoolSize() {
+        return actionThreadPoolSize;
     }
 
 }
