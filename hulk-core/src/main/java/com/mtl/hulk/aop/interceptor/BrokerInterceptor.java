@@ -71,6 +71,7 @@ public class BrokerInterceptor extends HulkAspectSupport implements HulkIntercep
 
     @Override
     public void destroy() {
+        orders.clear();
         ExecutorUtil.gracefulShutdown(tryExecutor);
     }
 

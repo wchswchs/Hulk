@@ -43,7 +43,7 @@ public abstract class HulkAspectSupport extends AbstractHulk implements BeanPost
             annotation = bean.getClass().getInterfaces()[0].getAnnotation(FeignClient.class);
         }
         if (annotation != null) {
-            HulkResourceManager.getBam().getClients().put(annotation.value(), bean);
+            HulkResourceManager.getClients().put(annotation.value(), bean);
         }
         return bean;
     }
