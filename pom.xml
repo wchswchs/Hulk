@@ -11,10 +11,11 @@
     <description>Distributed Transaction(TCC)</description>
 
     <properties>
+        <guava.version>23.6-jre</guava.version>
         <kryo.version>3.0.3</kryo.version>
         <servo.version>0.10.1</servo.version>
-        <springboot.version>1.4.6.RELEASE</springboot.version>
         <springcloud-starter-feign>1.2.7.RELEASE</springcloud-starter-feign>
+        <springboot.version>1.4.6.RELEASE</springboot.version>
         <findbugs.version>3.0.0</findbugs.version>
         <javac.version>1.8</javac.version>
         <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
@@ -22,6 +23,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.esotericsoftware</groupId>
                 <artifactId>kryo</artifactId>
@@ -44,13 +50,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>Camden.SR7</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -68,7 +67,6 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-jdbc</artifactId>
@@ -97,16 +95,16 @@
             <version>3.3.2</version>
         </dependency>
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-feign</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.esotericsoftware</groupId>
             <artifactId>kryo</artifactId>
         </dependency>
         <dependency>
             <groupId>com.netflix.servo</groupId>
             <artifactId>servo-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
         </dependency>
     </dependencies>
 
