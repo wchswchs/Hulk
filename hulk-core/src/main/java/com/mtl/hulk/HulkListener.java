@@ -6,7 +6,7 @@ import org.springframework.context.ApplicationContext;
 
 public abstract class HulkListener extends AbstractHulk {
 
-    protected volatile AtomicAction action;
+    protected final AtomicAction action;
 
     public HulkListener(AtomicAction action, ApplicationContext context) {
         super(context);
@@ -15,10 +15,7 @@ public abstract class HulkListener extends AbstractHulk {
 
     public HulkListener(HulkProperties properties, ApplicationContext apc) {
         super(properties, apc);
-    }
-
-    public void setAction(AtomicAction action) {
-        this.action = action;
+        this.action = null;
     }
 
     public abstract boolean process();

@@ -24,7 +24,7 @@ import static com.mtl.hulk.BusinessActivityLogger.getBusinessActivityIdStr;
 @Component
 public class BusinessActivityRestorer {
 
-    private Logger logger = LoggerFactory.getLogger(BusinessActivityRestorer.class);
+    private final Logger logger = LoggerFactory.getLogger(BusinessActivityRestorer.class);
 
     @Autowired
     private BusinessActivityManagerImpl bam;
@@ -33,7 +33,6 @@ public class BusinessActivityRestorer {
     private final Map<String, AtomicInteger> map = new HashMap<String, AtomicInteger>();
 
     public void run() {
-
         BusinessActivityLogger businessActivityLogger = BusinessActivityLoggerFactory.getStorage(properties);
         int retryTranactionCount = properties.getRetryTranactionCount();
         List<String> businessActivityIds = new ArrayList<>();

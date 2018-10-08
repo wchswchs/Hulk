@@ -12,12 +12,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class BusinessActivityLoggerExceptionThread extends AbstractHulk implements Runnable {
 
-    private Logger logger = LoggerFactory.getLogger(BusinessActivityLoggerExceptionThread.class);
+    private final Logger logger = LoggerFactory.getLogger(BusinessActivityLoggerExceptionThread.class);
 
-    private volatile BusinessActivityException ex;
+    private AtomicReference<BusinessActivityException> ex = new AtomicReference<BusinessActivityException>();
     private HulkContext ctx;
 
     public BusinessActivityLoggerExceptionThread(HulkProperties properties, HulkContext ctx){
@@ -36,7 +37,7 @@ public class BusinessActivityLoggerExceptionThread extends AbstractHulk implemen
             return;
         }
         try {
-            bal.writeEx(ex);
+            bal.writeEx(ex.get());
             logger.info("Written Exception log.");
         } catch (SQLException e) {
             logger.error("Hulk Log WriteEx Exception", e);
@@ -44,7 +45,7 @@ public class BusinessActivityLoggerExceptionThread extends AbstractHulk implemen
     }
 
     public void setEx(BusinessActivityException ex) {
-        this.ex = ex;
+        this.ex.set(ex);
     }
 
     @Override

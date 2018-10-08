@@ -25,7 +25,7 @@ public class BusinessActivityListener extends HulkListener {
                                                 Integer.MAX_VALUE, 10L,
                                                 TimeUnit.SECONDS, new SynchronousQueue<>(),
                                                 (new ThreadFactoryBuilder()).setNameFormat("Run-Thread-%d").build());
-    private CompletableFuture<HulkContext> runFuture;
+    private volatile CompletableFuture<HulkContext> runFuture;
 
     public BusinessActivityListener(HulkProperties properties, ApplicationContext apc) {
         super(properties, apc);
@@ -45,10 +45,10 @@ public class BusinessActivityListener extends HulkListener {
                                         new HulkContext(BusinessActivityContextHolder.getContext(),
                                         RuntimeContextHolder.getContext()));
         for (int i = 0; i < context.getActivity().getAtomicTryActions().size(); i ++) {
-            AtomicActionListener listener = new AtomicActionListener(currentActions.get(i), applicationContext,
+            AtomicActionListener listener = new AtomicActionListener(currentActions.get(i), applicationContext.get(),
                                             context.getActivity().getAtomicTryActions().get(i));
             listener.setProperties(properties);
-            listener.setApplicationContext(applicationContext);
+            listener.setApplicationContext(applicationContext.get());
             boolean status = listener.process();
             if (status == false) {
                 return false;
