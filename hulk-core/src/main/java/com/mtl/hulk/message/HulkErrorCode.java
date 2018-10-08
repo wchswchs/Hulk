@@ -6,7 +6,8 @@ public enum HulkErrorCode {
     ROLLBACK_FAIL(101, "Rollback失败, txId:{0}, action:{1}"),
     TRY_FAIL(102, "Try失败, txId:{0}, action:{1}"),
     COMMIT_TIMEOUT(103, "Commit超时"),
-    INTERRUPTED(104, "中断");
+    INTERRUPTED(104, "中断"),
+    RUN_EXCEPTION(105, "事务执行异常");
 
     private final int code;
 
