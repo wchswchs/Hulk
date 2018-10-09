@@ -4,14 +4,17 @@ import com.mtl.hulk.AbstractHulk;
 import com.mtl.hulk.HulkResourceManager;
 import com.mtl.hulk.HulkDataSource;
 import com.mtl.hulk.HulkInterceptor;
+import com.mtl.hulk.api.NetworkCommunication;
 import com.mtl.hulk.bam.BusinessActivityManagerImpl;
 import com.mtl.hulk.configuration.HulkProperties;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.context.ApplicationContext;
 
-public abstract class HulkAspectSupport extends AbstractHulk implements BeanPostProcessor {
+import java.util.Map;
+
+public abstract class HulkAspectSupport extends AbstractHulk implements InitializingBean, BeanPostProcessor {
 
     public HulkAspectSupport(HulkProperties properties, ApplicationContext apc) {
         super(properties, apc);
@@ -38,14 +41,18 @@ public abstract class HulkAspectSupport extends AbstractHulk implements BeanPost
                     || beanName.equals("hulkBrokerInterceptor")) {
             HulkResourceManager.getInterceptors().add((HulkInterceptor) bean);
         }
-        FeignClient annotation = null;
-        if (bean.getClass().getInterfaces().length > 0) {
-            annotation = bean.getClass().getInterfaces()[0].getAnnotation(FeignClient.class);
-        }
-        if (annotation != null) {
-            HulkResourceManager.getClients().put(annotation.value(), bean);
-        }
         return bean;
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        if (applicationContext.get() != null) {
+            NetworkCommunication nc = applicationContext.get().getBean(NetworkCommunication.class);
+            Map<String, Object> providers = nc.getProviders(applicationContext.get());
+            for (Map.Entry provider : providers.entrySet()) {
+                HulkResourceManager.getClients().put((String) provider.getKey(), provider.getValue());
+            }
+        }
     }
 
 }
