@@ -85,7 +85,7 @@ public class HulkConfiguration {
     }
 
     @Bean
-    public NetworkCommunication provider() {
+    public NetworkCommunication communication() {
         return new FeignClientCommunication();
     }
 
