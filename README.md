@@ -28,6 +28,11 @@
 以FeignClient为例，实现接口如下：
 
 ```java
+/**
+   * Return provider map like map <helloService, helloServiceBean>
+   * @param ctx ApplicationContext
+   * @return provider map
+*/
 public class FeignClientCommunication implements NetworkCommunication {
 
     @Override
