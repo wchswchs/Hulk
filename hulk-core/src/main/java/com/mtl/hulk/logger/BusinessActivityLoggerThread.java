@@ -14,7 +14,7 @@ import java.sql.SQLException;
 
 public class BusinessActivityLoggerThread extends AbstractHulk implements Runnable {
 
-    private Logger logger = LoggerFactory.getLogger(BusinessActivityLoggerThread.class);
+    private final Logger logger = LoggerFactory.getLogger(BusinessActivityLoggerThread.class);
     private HulkContext ctx;
 
     public BusinessActivityLoggerThread(HulkProperties properties, HulkContext ctx) {

@@ -26,7 +26,7 @@ import java.util.concurrent.*;
 
 public class TransactionInterceptor extends HulkAspectSupport implements HulkInterceptor, MethodInterceptor, Serializable {
 
-    private final static Logger logger = LoggerFactory.getLogger(TransactionInterceptor.class);
+    private static final Logger logger = LoggerFactory.getLogger(TransactionInterceptor.class);
 
     private final ExecutorService transactionExecutor = Executors.newFixedThreadPool(properties.getTransactionThreadPoolSize());
     private Future<Integer> future;
@@ -70,17 +70,14 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
                                     new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext())));
             response = HulkResponseFactory.getResponse(result);
         } catch (TimeoutException ex) {
-            RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.COMMIT_TIMEOUT.getCode(),
-                    HulkErrorCode.COMMIT_TIMEOUT.getMessage()));
-            destroyNow();
-            future = transactionExecutor.submit(new BusinessActivityExecutor(new HulkContext(BusinessActivityContextHolder.getContext(),
-                                    RuntimeContextHolder.getContext())));
-            result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
-            response = HulkResponseFactory.getResponse(result);
+            logger.error("Transaction Interceptor Error", ex);
+            response = processException(HulkErrorCode.COMMIT_TIMEOUT);
         } catch (NullPointerException ex) {
             logger.error("Transaction Interceptor Error", ex);
+            response = processException(HulkErrorCode.RUN_EXCEPTION);
         } catch (Exception ex) {
             logger.error("Transaction Interceptor Error", ex);
+            response = processException(HulkErrorCode.RUN_EXCEPTION);
         } finally {
             BusinessActivityContextHolder.clearContext();
             RuntimeContextHolder.clearContext();
@@ -98,6 +95,19 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
     public void destroyNow() {
         HulkResourceManager.getBam().getListener().destroyNow();
         FutureUtil.cancelNow(future);
+    }
+
+    private HulkResponse processException(HulkErrorCode hulkErrorCode) throws Exception {
+        Integer result = 1;
+
+        RuntimeContextHolder.getContext().setException(new HulkException(hulkErrorCode.getCode(),
+                hulkErrorCode.getMessage()));
+        destroyNow();
+        future = transactionExecutor.submit(new BusinessActivityExecutor(new HulkContext(BusinessActivityContextHolder.getContext(),
+                RuntimeContextHolder.getContext())));
+        result = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
+
+        return HulkResponseFactory.getResponse(result);
     }
 
     private boolean prepareContext(MethodInvocation methodInvocation) {
@@ -138,7 +148,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
         AtomicAction confirmAction = new AtomicAction();
         ServiceOperation confirmServiceOperation = new ServiceOperation();
         confirmServiceOperation.setName(transaction.confirmMethod());
-        confirmServiceOperation.setService(applicationContext.getId().split(":")[0]);
+        confirmServiceOperation.setService(applicationContext.get().getId().split(":")[0]);
         confirmServiceOperation.setType(ServiceOperationType.TCC);
         confirmAction.setServiceOperation(confirmServiceOperation);
         confirmAction.setCallType(transaction.callType());
@@ -147,7 +157,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
         AtomicAction cancelAction = new AtomicAction();
         ServiceOperation cancelServiceOperation = new ServiceOperation();
         cancelServiceOperation.setName(transaction.cancelMethod());
-        cancelServiceOperation.setService(applicationContext.getId().split(":")[0]);
+        cancelServiceOperation.setService(applicationContext.get().getId().split(":")[0]);
         cancelServiceOperation.setType(ServiceOperationType.TCC);
         cancelAction.setServiceOperation(cancelServiceOperation);
         cancelAction.setCallType(transaction.callType());

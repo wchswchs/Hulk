@@ -18,9 +18,7 @@ public enum BusinessActivityStatus {
 
     ROLLBACKING_FAILED(8, "rollback失败"),
 
-    ROLLBACKED(9, "rollback成功"),
-
-    COMPLETE(10, "业务活动结束");
+    ROLLBACKED(9, "rollback成功");
 
     private final int code;
 

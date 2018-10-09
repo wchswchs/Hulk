@@ -1,6 +1,6 @@
 package com.mtl.hulk;
 
-public class HulkResponse {
+public final class HulkResponse {
 
     private int status;
     private String message;

@@ -7,8 +7,10 @@ import com.mtl.hulk.aop.interceptor.BrokerInterceptor;
 import com.mtl.hulk.aop.interceptor.TransactionInterceptor;
 import com.mtl.hulk.aop.pointcut.BrokerPointcut;
 import com.mtl.hulk.aop.pointcut.TransactionPointcut;
+import com.mtl.hulk.api.NetworkCommunication;
 import com.mtl.hulk.bam.BusinessActivityManagerImpl;
 import com.mtl.hulk.logger.data.sql.SQLDataSource;
+import com.mtl.hulk.plugin.net.FeignClientCommunication;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -80,6 +82,11 @@ public class HulkConfiguration {
         }
 
         return new SQLDataSource(writeDataSources, readDataSources);
+    }
+
+    @Bean
+    public NetworkCommunication communication() {
+        return new FeignClientCommunication();
     }
 
     @Bean

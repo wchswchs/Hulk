@@ -28,7 +28,7 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
     private final Logger logger = LoggerFactory.getLogger(BusinessActivityManagerImpl.class);
 
     private final BusinessActivityListener listener;
-    private CompletableFuture<Map<Integer, HulkContext>> tryFuture;
+    private volatile CompletableFuture<Map<Integer, HulkContext>> tryFuture;
     private final ExecutorService logExecutor = new ThreadPoolExecutor(properties.getLogThreadPoolSize(),
                                         Integer.MAX_VALUE, 5L,
                                         TimeUnit.SECONDS, new SynchronousQueue<>(),
@@ -49,6 +49,7 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
             Object result = methodInvocation.proceed();
             if (RuntimeContextHolder.getContext().getActivity().getId() != null) {
                 Map<Integer, HulkContext> hc = tryFuture.join();
+                logger.info("Interceptor order map size: {}", BrokerInterceptor.getOrders().size());
                 if (hc != null && hc.size() > 0
                         && BrokerInterceptor.getOrders() != null
                         && BrokerInterceptor.getOrders().size() > 0) {

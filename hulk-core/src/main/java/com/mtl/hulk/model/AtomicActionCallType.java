@@ -1,11 +1,10 @@
 package com.mtl.hulk.model;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.cloud.netflix.feign.FeignClient;
 
 public enum AtomicActionCallType {
 
-    RequestResponse("RequestResponse", FeignClient.class),
+    RequestResponse("RequestResponse", null),
     Async("Async", null),
     HAAsync("HAAsync", null);
 

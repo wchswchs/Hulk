@@ -24,7 +24,7 @@ import static com.mtl.hulk.BusinessActivityLogger.getBusinessActivityIdStr;
 @Component
 public class BusinessActivityRestorer {
 
-    private Logger logger = LoggerFactory.getLogger(BusinessActivityRestorer.class);
+    private final Logger logger = LoggerFactory.getLogger(BusinessActivityRestorer.class);
 
     @Autowired
     private BusinessActivityManagerImpl bam;
@@ -33,7 +33,6 @@ public class BusinessActivityRestorer {
     private final Map<String, AtomicInteger> map = new HashMap<String, AtomicInteger>();
 
     public void run() {
-
         BusinessActivityLogger businessActivityLogger = BusinessActivityLoggerFactory.getStorage(properties);
         int retryTranactionCount = properties.getRetryTranactionCount();
         List<String> businessActivityIds = new ArrayList<>();
@@ -53,12 +52,12 @@ public class BusinessActivityRestorer {
                     logger.error(String.format("recover failed with max retry count,will not try again" + "retried count:%d", retryCount));
                     continue;
                 }
-                if (hulkTransactionActivity.getBusinessActivity().getStatus() != BusinessActivityStatus.COMPLETE) {
-                    if (hulkTransactionActivity.getBusinessActivity().getStatus() == BusinessActivityStatus.ROLLBACKED) {
-                        bam.commit();
-                    } else if (hulkTransactionActivity.getBusinessActivity().getStatus() == BusinessActivityStatus.ROLLBACKING_FAILED) {
-                        bam.rollback();
-                    }
+                if (hulkTransactionActivity.getBusinessActivity().getStatus().getCode() < BusinessActivityStatus.COMMITTED.getCode()
+                    || hulkTransactionActivity.getBusinessActivity().getStatus() == BusinessActivityStatus.ROLLBACKED) {
+                    bam.commit();
+                } else if (hulkTransactionActivity.getBusinessActivity().getStatus() == BusinessActivityStatus.ROLLBACKING
+                            || hulkTransactionActivity.getBusinessActivity().getStatus() == BusinessActivityStatus.ROLLBACKING_FAILED) {
+                    bam.rollback();
                 }
             }
             businessActivityLogger.remove(businessActivityIds);
@@ -69,10 +68,8 @@ public class BusinessActivityRestorer {
 
     private int getRetryCount(String businessActivityIdStr) {
         if (!map.containsKey(businessActivityIdStr)) {
-            synchronized (map) {
-                if (!map.containsKey(businessActivityIdStr)) {
-                    map.put(businessActivityIdStr, new AtomicInteger(0));
-                }
+            if (!map.containsKey(businessActivityIdStr)) {
+                map.put(businessActivityIdStr, new AtomicInteger(0));
             }
         }
         return map.get(businessActivityIdStr).incrementAndGet();

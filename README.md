@@ -1,24 +1,63 @@
 # Hulk
-高性能分布式事务框架(TCC模式，基于Spring Cloud)
+高性能分布式事务框架(TCC模式)
 
 该框架采用TCC请求异步化和无锁设计方案，极大提升了事务处理的性能。
 
 ## 特性
 
 1. TCC异步化，同比性能高于其他开源产品(比如：tcc-transaction，hmily，easyTransaction)
-2. 支持事务执行超时回滚
-3. 独立事务恢复进程，避免框架所在线程异常退出导致事务无法恢复
-4. 支持事务日志存储读写分离
-5. 事务日志线程池、事务ID生成策略可配置
-6. 支持分支事务(事务嵌套)
-7. 业务代码无侵入
-8. 默认支持RU事务隔离级别
+2. 提供服务通讯方式扩展接口，可自定义通讯方式，如：dubbo, 异步消息模式
+3. 支持事务执行超时回滚
+4. 独立事务恢复进程，避免框架所在线程异常退出导致事务无法恢复
+5. 支持事务日志存储读写分离
+6. 事务ID生成策略可配置
+7. 支持分支事务(事务嵌套)
+8. 业务代码无侵入
+9. 默认支持RU事务隔离级别
 
 ## 使用指南
 
 ### Getting Started
 
 使用代码中请求serviceA，将调用serviceB和serviceC
+
+### 通讯方式自定义
+
+#### 实现远程通讯接口NetworkCommunication
+
+以FeignClient为例，实现接口如下：
+
+```java
+/**
+   * Return provider map like map <helloService, helloServiceBean>
+   * @param ctx ApplicationContext
+   * @return provider map
+*/
+public class FeignClientCommunication implements NetworkCommunication {
+
+    @Override
+    public Map<String, Object> getProviders(ApplicationContext ctx) {
+        FeignClient annotation = null;
+        Map<String, Object> providerMap = new HashMap<String, Object>();
+        Map<String, Object> feignClientMap = ctx.getBeansWithAnnotation(FeignClient.class);
+        for (Object client : feignClientMap.values()) {
+            annotation = client.getClass().getInterfaces()[0].getAnnotation(FeignClient.class);
+            providerMap.put(annotation.value(), client);
+        }
+        return providerMap;
+    }
+
+}
+```
+#### 注入Bean
+
+以FeignClient为例，如下：
+```java
+@Bean
+public NetworkCommunication communication() {
+    return new FeignClientCommunication();
+}
+```
 
 ### 依赖与配置项
 #### 工程依赖
