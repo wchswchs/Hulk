@@ -9,50 +9,24 @@
         <version>1.0.1</version>
     </parent>
 
-    <artifactId>hulk-core</artifactId>
+    <artifactId>hulk-db</artifactId>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>com.mtl.hulk</groupId>
-                <artifactId>hulk-common</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.mtl.hulk</groupId>
-                <artifactId>hulk-extension</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.mtl.hulk</groupId>
-                <artifactId>hulk-db</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.mtl.hulk</groupId>
                 <artifactId>hulk-tools</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mtl.hulk</groupId>
+                <artifactId>hulk-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-feign</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.github.openfeign</groupId>
-            <artifactId>feign-okhttp</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.mtl.hulk</groupId>
-            <artifactId>hulk-extension</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.mtl.hulk</groupId>
-            <artifactId>hulk-db</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.mtl.hulk</groupId>
             <artifactId>hulk-tools</artifactId>
@@ -62,4 +36,5 @@
             <artifactId>hulk-common</artifactId>
         </dependency>
     </dependencies>
+
 </project>

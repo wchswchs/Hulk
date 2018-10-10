@@ -2,7 +2,7 @@ package com.mtl.hulk.security;
 
 import com.alibaba.fastjson.JSONObject;
 import com.mtl.hulk.HulkSecurity;
-import com.mtl.hulk.util.CryptUtil;
+import com.mtl.hulk.tools.CryptUtil;
 
 import java.security.SecureRandom;
 

@@ -1,4 +1,4 @@
-package com.mtl.hulk.api;
+package com.mtl.hulk.extension;
 
 import org.springframework.context.ApplicationContext;
 

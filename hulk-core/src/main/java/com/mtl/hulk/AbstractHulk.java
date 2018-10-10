@@ -1,5 +1,6 @@
 package com.mtl.hulk;
 
+import com.mtl.hulk.common.Resource;
 import com.mtl.hulk.configuration.HulkProperties;
 import org.springframework.context.ApplicationContext;
 

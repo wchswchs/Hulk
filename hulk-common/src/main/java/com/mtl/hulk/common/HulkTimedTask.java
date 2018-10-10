@@ -1,4 +1,4 @@
-package com.mtl.hulk;
+package com.mtl.hulk.common;
 
 import com.netflix.servo.monitor.Counter;
 import com.netflix.servo.monitor.LongGauge;

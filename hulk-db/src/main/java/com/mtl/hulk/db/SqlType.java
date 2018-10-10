@@ -1,4 +1,4 @@
-package com.mtl.hulk.logger.data.sql;
+package com.mtl.hulk.db;
 
 public enum SqlType {
 

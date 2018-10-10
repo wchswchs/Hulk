@@ -2,7 +2,7 @@ package com.mtl.hulk.logger.data.sql;
 
 import com.alibaba.fastjson.JSONObject;
 import com.mtl.hulk.BusinessActivityLogger;
-import com.mtl.hulk.HulkDataSource;
+import com.mtl.hulk.db.HulkDataSource;
 import com.mtl.hulk.HulkSerializer;
 import com.mtl.hulk.context.BusinessActivityContext;
 import com.mtl.hulk.context.HulkContext;

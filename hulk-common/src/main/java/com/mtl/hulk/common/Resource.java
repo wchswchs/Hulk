@@ -1,4 +1,4 @@
-package com.mtl.hulk;
+package com.mtl.hulk.common;
 
 public interface Resource {
 

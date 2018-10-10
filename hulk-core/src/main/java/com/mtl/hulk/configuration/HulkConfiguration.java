@@ -1,16 +1,16 @@
 package com.mtl.hulk.configuration;
 
-import com.mtl.hulk.HulkDataSource;
 import com.mtl.hulk.HulkShutdownHook;
 import com.mtl.hulk.aop.BeanFactoryHulkAdvisor;
 import com.mtl.hulk.aop.interceptor.BrokerInterceptor;
 import com.mtl.hulk.aop.interceptor.TransactionInterceptor;
 import com.mtl.hulk.aop.pointcut.BrokerPointcut;
 import com.mtl.hulk.aop.pointcut.TransactionPointcut;
-import com.mtl.hulk.api.NetworkCommunication;
+import com.mtl.hulk.db.HulkDataSource;
+import com.mtl.hulk.extension.NetworkCommunication;
 import com.mtl.hulk.bam.BusinessActivityManagerImpl;
-import com.mtl.hulk.logger.data.sql.SQLDataSource;
-import com.mtl.hulk.plugin.net.FeignClientCommunication;
+import com.mtl.hulk.db.SQLDataSource;
+import com.mtl.hulk.traffic.FeignClientCommunication;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

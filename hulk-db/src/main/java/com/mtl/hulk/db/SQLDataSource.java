@@ -1,7 +1,7 @@
-package com.mtl.hulk.logger.data.sql;
+package com.mtl.hulk.db;
 
-import com.mtl.hulk.HulkDataSource;
-import com.mtl.hulk.util.StringUtil;
+import com.mtl.hulk.db.HulkDataSource;
+import com.mtl.hulk.tools.StringUtil;
 import org.apache.tomcat.jdbc.pool.DataSource;
 
 import java.sql.PreparedStatement;

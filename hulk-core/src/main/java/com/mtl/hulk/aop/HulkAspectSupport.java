@@ -2,9 +2,9 @@ package com.mtl.hulk.aop;
 
 import com.mtl.hulk.AbstractHulk;
 import com.mtl.hulk.HulkResourceManager;
-import com.mtl.hulk.HulkDataSource;
+import com.mtl.hulk.db.HulkDataSource;
 import com.mtl.hulk.HulkInterceptor;
-import com.mtl.hulk.api.NetworkCommunication;
+import com.mtl.hulk.extension.NetworkCommunication;
 import com.mtl.hulk.bam.BusinessActivityManagerImpl;
 import com.mtl.hulk.configuration.HulkProperties;
 import org.springframework.beans.BeansException;

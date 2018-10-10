@@ -9,7 +9,7 @@ import com.mtl.hulk.model.AtomicAction;
 import com.mtl.hulk.model.BusinessActivityStatus;
 import com.mtl.hulk.context.RuntimeContext;
 import com.mtl.hulk.context.RuntimeContextHolder;
-import com.mtl.hulk.util.FutureUtil;
+import com.mtl.hulk.tools.FutureUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;

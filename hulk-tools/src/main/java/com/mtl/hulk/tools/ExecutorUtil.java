@@ -1,4 +1,4 @@
-package com.mtl.hulk.util;
+package com.mtl.hulk.tools;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.slf4j.Logger;
