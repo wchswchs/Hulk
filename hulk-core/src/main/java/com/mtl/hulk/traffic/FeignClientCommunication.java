@@ -1,6 +1,6 @@
-package com.mtl.hulk.plugin.net;
+package com.mtl.hulk.traffic;
 
-import com.mtl.hulk.api.NetworkCommunication;
+import com.mtl.hulk.extension.NetworkCommunication;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.context.ApplicationContext;
 

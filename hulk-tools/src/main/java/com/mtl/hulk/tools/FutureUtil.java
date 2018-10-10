@@ -1,4 +1,4 @@
-package com.mtl.hulk.util;
+package com.mtl.hulk.tools;
 
 import java.util.concurrent.Future;
 

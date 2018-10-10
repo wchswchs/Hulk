@@ -1,4 +1,4 @@
-package com.mtl.hulk.util;
+package com.mtl.hulk.tools;
 
 import javax.validation.constraints.NotNull;
 import java.nio.charset.Charset;

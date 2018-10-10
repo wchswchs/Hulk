@@ -1,5 +1,6 @@
-package com.mtl.hulk;
+package com.mtl.hulk.db;
 
+import com.mtl.hulk.common.Resource;
 import org.apache.tomcat.jdbc.pool.DataSource;
 
 import java.sql.PreparedStatement;

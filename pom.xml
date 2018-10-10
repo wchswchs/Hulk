@@ -14,6 +14,7 @@
         <guava.version>23.6-jre</guava.version>
         <kryo.version>3.0.3</kryo.version>
         <servo.version>0.10.1</servo.version>
+        <feign-okhttp.version>9.3.1</feign-okhttp.version>
         <springcloud-starter-feign>1.2.7.RELEASE</springcloud-starter-feign>
         <springboot.version>1.4.6.RELEASE</springboot.version>
         <findbugs.version>3.0.0</findbugs.version>
@@ -37,6 +38,11 @@
                 <groupId>com.netflix.servo</groupId>
                 <artifactId>servo-core</artifactId>
                 <version>${servo.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.openfeign</groupId>
+                <artifactId>feign-okhttp</artifactId>
+                <version>${feign-okhttp.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
@@ -78,11 +84,6 @@
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-jdbc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.netflix.feign</groupId>
-            <artifactId>feign-core</artifactId>
-            <version>8.1.1</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -144,6 +145,10 @@
         <module>hulk-core</module>
         <module>hulk-test</module>
         <module>hulk-job</module>
+        <module>hulk-db</module>
+        <module>hulk-tools</module>
+        <module>hulk-common</module>
+        <module>hulk-extensions</module>
         <module>hulk-serviceA</module>
         <module>hulk-serviceB</module>
         <module>hulk-serviceC</module>
