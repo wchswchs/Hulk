@@ -20,7 +20,7 @@
             </dependency>
             <dependency>
                 <groupId>com.mtl.hulk</groupId>
-                <artifactId>hulk-extension</artifactId>
+                <artifactId>hulk-extensions</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -47,7 +47,7 @@
         </dependency>
         <dependency>
             <groupId>com.mtl.hulk</groupId>
-            <artifactId>hulk-extension</artifactId>
+            <artifactId>hulk-extensions</artifactId>
         </dependency>
         <dependency>
             <groupId>com.mtl.hulk</groupId>

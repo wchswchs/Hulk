@@ -2,10 +2,10 @@ package com.mtl.hulk.bam;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.AbstractHulk;
-import com.mtl.hulk.HulkException;
 import com.mtl.hulk.aop.interceptor.BrokerInterceptor;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
 import com.mtl.hulk.context.HulkContext;
+import com.mtl.hulk.exception.HulkException;
 import com.mtl.hulk.listener.BusinessActivityListener;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.message.HulkErrorCode;
@@ -41,52 +41,58 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
 
     @Override
     public boolean start(MethodInvocation methodInvocation) {
-        tryFuture = CompletableFuture.completedFuture(
-                new ConcurrentHashMap<Integer, HulkContext>());
-        boolean status = false;
         try {
-            BrokerInterceptor.setOrders(new CopyOnWriteArrayList<>());
             Object result = methodInvocation.proceed();
             if (RuntimeContextHolder.getContext().getActivity().getId() != null) {
-                Map<Integer, HulkContext> hc = tryFuture.join();
-                logger.info("Interceptor order map size: {}", BrokerInterceptor.getOrders().size());
-                if (hc != null && hc.size() > 0
-                        && BrokerInterceptor.getOrders() != null
-                        && BrokerInterceptor.getOrders().size() > 0) {
-                    for (int i = 0; i < BrokerInterceptor.getOrders().size(); i++) {
-                        if (hc.get(i) != null) {
-                            RuntimeContextHolder.getContext().getActivity().getAtomicTryActions()
-                                    .addAll(hc.get(i).getRc().getActivity().getAtomicTryActions());
-                            RuntimeContextHolder.getContext().getActivity().getAtomicCommitActions()
-                                    .addAll(hc.get(i).getRc().getActivity().getAtomicCommitActions());
-                            RuntimeContextHolder.getContext().getActivity().getAtomicRollbackActions()
-                                    .addAll(hc.get(i).getRc().getActivity().getAtomicRollbackActions());
-                            BusinessActivityContextHolder.getContext().getParams().putAll(hc.get(i)
-                                    .getBac().getParams());
-                        }
+                for (Future tryFuture : BrokerInterceptor.getTryFutures()) {
+                    Object tryResponse = tryFuture.get();
+                    if (tryResponse == null) {
+                        return false;
                     }
+                    RuntimeContextHolder.getContext().getActivity().getAtomicTryActions().addAll(((HulkContext)tryResponse).getRc().getActivity().getAtomicTryActions());
+                    RuntimeContextHolder.getContext().getActivity().getAtomicCommitActions().addAll(((HulkContext)tryResponse).getRc().getActivity().getAtomicCommitActions());
+                    RuntimeContextHolder.getContext().getActivity().getAtomicRollbackActions().addAll(((HulkContext)tryResponse).getRc().getActivity().getAtomicRollbackActions());
+                    BusinessActivityContextHolder.getContext().getParams().putAll(((HulkContext)tryResponse).getBac().getParams());
                 }
-                status = true;
             }
         } catch (Throwable ex) {
-            RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.TRY_FAIL.getCode(),
+            RuntimeContextHolder.getContext().setException(new com.mtl.hulk.HulkException(HulkErrorCode.TRY_FAIL.getCode(),
                     MessageFormat.format(HulkErrorCode.TRY_FAIL.getMessage(),
                             RuntimeContextHolder.getContext().getActivity().getId().formatString(), methodInvocation.getMethod().getName())));
             logger.error("Hulk Try Exception", ex);
+            return false;
+        } finally {
+            BrokerInterceptor.getTryFutures().clear();
         }
-        return status;
+        return true;
     }
 
     @Override
     public boolean commit() {
         RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITTING);
-        return listener.process();
+        try {
+            return listener.process();
+        } catch (Exception ex) {
+            RuntimeContextHolder.getContext().setException(new com.mtl.hulk.HulkException(HulkErrorCode.COMMIT_FAIL.getCode(),
+                    MessageFormat.format(HulkErrorCode.COMMIT_FAIL.getMessage(),
+                            RuntimeContextHolder.getContext().getActivity().getId().formatString(), ((HulkException) ex).getAction())));
+            logger.error("Hulk Commit Exception", ex);
+        }
+        return true;
     }
 
     @Override
     public boolean rollback() {
         RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKING);
-        return listener.process();
+        try {
+            return listener.process();
+        } catch (Exception ex) {
+            RuntimeContextHolder.getContext().setException(new com.mtl.hulk.HulkException(HulkErrorCode.ROLLBACK_FAIL.getCode(),
+                    MessageFormat.format(HulkErrorCode.ROLLBACK_FAIL.getMessage(),
+                            RuntimeContextHolder.getContext().getActivity().getId().formatString(), ((HulkException) ex).getAction())));
+            logger.error("Hulk Rollback Exception", ex);
+        }
+        return true;
     }
 
     public BusinessActivityListener getListener() {
