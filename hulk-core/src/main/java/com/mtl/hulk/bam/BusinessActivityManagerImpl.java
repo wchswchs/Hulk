@@ -5,21 +5,19 @@ import com.mtl.hulk.AbstractHulk;
 import com.mtl.hulk.aop.interceptor.BrokerInterceptor;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
 import com.mtl.hulk.context.HulkContext;
-import com.mtl.hulk.exception.HulkException;
+import com.mtl.hulk.exception.ExecuteException;
 import com.mtl.hulk.listener.BusinessActivityListener;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.message.HulkErrorCode;
 import com.mtl.hulk.model.BusinessActivityStatus;
 import com.mtl.hulk.context.RuntimeContextHolder;
 import com.mtl.hulk.tools.ExecutorUtil;
-import com.mtl.hulk.tools.FutureUtil;
 import org.aopalliance.intercept.MethodInvocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import java.text.MessageFormat;
-import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
@@ -28,7 +26,6 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
     private final Logger logger = LoggerFactory.getLogger(BusinessActivityManagerImpl.class);
 
     private final BusinessActivityListener listener;
-    private volatile CompletableFuture<Map<Integer, HulkContext>> tryFuture;
     private final ExecutorService logExecutor = new ThreadPoolExecutor(properties.getLogThreadPoolSize(),
                                         Integer.MAX_VALUE, 5L,
                                         TimeUnit.SECONDS, new SynchronousQueue<>(),
@@ -68,31 +65,33 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
     }
 
     @Override
-    public boolean commit() {
+    public boolean commit() throws Exception {
         RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITTING);
         try {
             return listener.process();
+        } catch (CancellationException ex) {
+            throw ex;
         } catch (Exception ex) {
             RuntimeContextHolder.getContext().setException(new com.mtl.hulk.HulkException(HulkErrorCode.COMMIT_FAIL.getCode(),
                     MessageFormat.format(HulkErrorCode.COMMIT_FAIL.getMessage(),
-                            RuntimeContextHolder.getContext().getActivity().getId().formatString(), ((HulkException) ex).getAction())));
-            logger.error("Hulk Commit Exception", ex);
+                            RuntimeContextHolder.getContext().getActivity().getId().formatString(), ((ExecuteException) ex).getAction())));
+            throw ex;
         }
-        return true;
     }
 
     @Override
-    public boolean rollback() {
+    public boolean rollback() throws Exception {
         RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKING);
         try {
             return listener.process();
+        } catch (CancellationException ex) {
+            throw ex;
         } catch (Exception ex) {
             RuntimeContextHolder.getContext().setException(new com.mtl.hulk.HulkException(HulkErrorCode.ROLLBACK_FAIL.getCode(),
                     MessageFormat.format(HulkErrorCode.ROLLBACK_FAIL.getMessage(),
-                            RuntimeContextHolder.getContext().getActivity().getId().formatString(), ((HulkException) ex).getAction())));
-            logger.error("Hulk Rollback Exception", ex);
+                            RuntimeContextHolder.getContext().getActivity().getId().formatString(), ((ExecuteException) ex).getAction())));
+            throw ex;
         }
-        return true;
     }
 
     public BusinessActivityListener getListener() {
@@ -103,14 +102,6 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
         return properties;
     }
 
-    public CompletableFuture<Map<Integer, HulkContext>> getTryFuture() {
-        return tryFuture;
-    }
-
-    public void setTryFuture(CompletableFuture<Map<Integer, HulkContext>> tryFuture) {
-        this.tryFuture = tryFuture;
-    }
-
     public ExecutorService getLogExecutor() {
         return logExecutor;
     }
@@ -118,15 +109,17 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
     @Override
     public void destroy() {
         listener.destroy();
-        FutureUtil.gracefulCancel(tryFuture);
         ExecutorUtil.gracefulShutdown(logExecutor);
-        ExecutorUtil.shutdownNow(listener.getRunExecutor());
     }
 
     @Override
     public void destroyNow() {
         listener.destroyNow();
-        ExecutorUtil.shutdownNow(listener.getRunExecutor());
+        ExecutorUtil.shutdownNow(logExecutor);
+    }
+
+    @Override
+    public void closeFuture() {
     }
 
 }

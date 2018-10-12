@@ -33,4 +33,8 @@ public abstract class HulkDataSource implements Resource {
     public void destroyNow() {
     }
 
+    @Override
+    public void closeFuture() {
+    }
+
 }

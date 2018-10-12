@@ -1,6 +1,5 @@
 package com.mtl.hulk.db;
 
-import com.mtl.hulk.db.HulkDataSource;
 import com.mtl.hulk.tools.StringUtil;
 import org.apache.tomcat.jdbc.pool.DataSource;
 

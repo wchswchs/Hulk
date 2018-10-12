@@ -56,4 +56,8 @@ public class BusinessActivityLoggerExceptionThread extends AbstractHulk implemen
     public void destroyNow() {
     }
 
+    @Override
+    public void closeFuture() {
+    }
+
 }

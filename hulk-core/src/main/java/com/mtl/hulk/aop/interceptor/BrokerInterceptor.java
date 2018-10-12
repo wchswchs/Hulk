@@ -7,6 +7,7 @@ import com.mtl.hulk.aop.HulkAspectSupport;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.*;
 import com.mtl.hulk.tools.ExecutorUtil;
+import com.mtl.hulk.tools.FutureUtil;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.slf4j.Logger;
@@ -39,7 +40,7 @@ public class BrokerInterceptor extends HulkAspectSupport implements HulkIntercep
                 try {
                     return JSONObject.parseObject((String)methodInvocation.proceed(), HulkContext.class);
                 } catch (Throwable t) {
-                    logger.error("Broker Interceptor Exception: {}", t);
+                    logger.error("Broker Interceptor Exception", t);
                 }
                 return null;
             }
@@ -54,12 +55,34 @@ public class BrokerInterceptor extends HulkAspectSupport implements HulkIntercep
 
     @Override
     public void destroy() {
-        tryFutures.clear();
+        if (tryFutures.size() > 0) {
+            for (Future tryFuture : tryFutures) {
+                FutureUtil.gracefulCancel(tryFuture);
+            }
+            tryFutures.clear();
+        }
         ExecutorUtil.gracefulShutdown(tryExecutor);
     }
 
     @Override
     public void destroyNow() {
+        if (tryFutures.size() > 0) {
+            for (Future tryFuture : tryFutures) {
+                FutureUtil.cancelNow(tryFuture);
+            }
+            tryFutures.clear();
+        }
+        ExecutorUtil.shutdownNow(tryExecutor);
+    }
+
+    @Override
+    public void closeFuture() {
+        if (tryFutures.size() > 0) {
+            for (Future tryFuture : tryFutures) {
+                FutureUtil.cancelNow(tryFuture);
+            }
+            tryFutures.clear();
+        }
     }
 
 }

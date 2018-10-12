@@ -42,4 +42,8 @@ public class BusinessActivityLoggerThread extends AbstractHulk implements Runnab
     public void destroyNow() {
     }
 
+    @Override
+    public void closeFuture() {
+    }
+
 }

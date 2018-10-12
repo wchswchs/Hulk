@@ -63,6 +63,8 @@ public class BusinessActivityRestorer {
             businessActivityLogger.remove(businessActivityIds);
         } catch (SQLException ex) {
             logger.error("Hulk Retry Exception", ex);
+        } catch (Exception ex) {
+            logger.error("Hulk Retry Exception", ex);
         }
     }
 
@@ -74,4 +76,5 @@ public class BusinessActivityRestorer {
         }
         return map.get(businessActivityIdStr).incrementAndGet();
     }
+
 }

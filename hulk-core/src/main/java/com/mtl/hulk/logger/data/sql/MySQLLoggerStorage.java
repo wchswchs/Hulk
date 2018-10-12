@@ -211,4 +211,8 @@ public class MySQLLoggerStorage extends BusinessActivityLogger {
     public void destroyNow() {
     }
 
+    @Override
+    public void closeFuture() {
+    }
+
 }

@@ -3,10 +3,12 @@ package com.mtl.hulk.listener;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.HulkListener;
 import com.mtl.hulk.configuration.HulkProperties;
+import com.mtl.hulk.context.BusinessActivityContextHolder;
 import com.mtl.hulk.model.AtomicAction;
 import com.mtl.hulk.model.BusinessActivityStatus;
 import com.mtl.hulk.context.RuntimeContext;
 import com.mtl.hulk.context.RuntimeContextHolder;
+import com.mtl.hulk.tools.FutureUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -41,7 +43,7 @@ public class BusinessActivityListener extends HulkListener {
         try {
             for (int i = 0; i < context.getActivity().getAtomicTryActions().size(); i ++) {
                 AtomicActionListener listener = new AtomicActionListener(currentActions.get(i), applicationContext.get(),
-                        context.getActivity().getAtomicTryActions().get(i));
+                        context.getActivity().getAtomicTryActions().get(i), BusinessActivityContextHolder.getContext());
                 listener.setProperties(properties);
                 listener.setApplicationContext(applicationContext.get());
                 Future<Boolean> runFuture = runExecutor.submit(new Callable<Boolean>() {
@@ -62,12 +64,14 @@ public class BusinessActivityListener extends HulkListener {
                     return false;
                 }
             }
-        } catch (Exception ex) {
-            throw ex;
         } finally {
             runFutures.clear();
         }
         return true;
+    }
+
+    public static List<Future> getRunFutures() {
+        return runFutures;
     }
 
     public ExecutorService getRunExecutor() {
@@ -76,10 +80,34 @@ public class BusinessActivityListener extends HulkListener {
 
     @Override
     public void destroy() {
+        if (runFutures.size() > 0) {
+            for (Future runFuture : runFutures) {
+                FutureUtil.gracefulCancel(runFuture);
+            }
+            runFutures.clear();
+        }
+        runExecutor.shutdown();
     }
 
     @Override
     public void destroyNow() {
+        if (runFutures.size() > 0) {
+            for (Future runFuture : runFutures) {
+                FutureUtil.cancelNow(runFuture);
+            }
+            runFutures.clear();
+        }
+        runExecutor.shutdownNow();
+    }
+
+    @Override
+    public void closeFuture() {
+        if (runFutures.size() > 0) {
+            for (Future runFuture : runFutures) {
+                FutureUtil.cancelNow(runFuture);
+            }
+            runFutures.clear();
+        }
     }
 
 }

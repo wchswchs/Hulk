@@ -145,7 +145,7 @@
         <module>hulk-core</module>
         <module>hulk-test</module>
         <module>hulk-job</module>
-        <module>hulk-db</module>
+        <module>hulk-database</module>
         <module>hulk-tools</module>
         <module>hulk-common</module>
         <module>hulk-extensions</module>

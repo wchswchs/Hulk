@@ -3,7 +3,7 @@ package com.mtl.hulk.listener;
 import com.mtl.hulk.HulkListener;
 import com.mtl.hulk.HulkResourceManager;
 import com.mtl.hulk.context.*;
-import com.mtl.hulk.exception.HulkException;
+import com.mtl.hulk.exception.ExecuteException;
 import com.mtl.hulk.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,18 +15,18 @@ import java.lang.reflect.Method;
 public class AtomicActionListener extends HulkListener {
 
     private volatile AtomicAction tryAction;
-
+    private volatile BusinessActivityContext bac;
     private final Logger logger = LoggerFactory.getLogger(AtomicActionListener.class);
 
-    public AtomicActionListener(AtomicAction action, ApplicationContext applicationContext, AtomicAction tryAction) {
+    public AtomicActionListener(AtomicAction action, ApplicationContext applicationContext, AtomicAction tryAction, BusinessActivityContext bac) {
         super(action, applicationContext);
         this.tryAction = tryAction;
+        this.bac = bac;
     }
 
     @Override
     public boolean process() throws Exception {
         if (action.getServiceOperation().getType() == ServiceOperationType.TCC) {
-            BusinessActivityContext bac = BusinessActivityContextHolder.getContext();
                 Object object = null;
                 try {
                     if (applicationContext.get().getId().split(":")[0].equals(action.getServiceOperation().getService())) {
@@ -41,9 +41,9 @@ public class AtomicActionListener extends HulkListener {
                         return false;
                     }
                 } catch (InvocationTargetException ex) {
-                    throw new HulkException(action.getServiceOperation().getName(), ex);
+                    throw new ExecuteException(action.getServiceOperation().getName(), ex);
                 } catch (Exception ex) {
-                    throw new HulkException(action.getServiceOperation().getName(), ex);
+                    throw new ExecuteException(action.getServiceOperation().getName(), ex);
                 }
         }
         return true;
@@ -55,6 +55,10 @@ public class AtomicActionListener extends HulkListener {
 
     @Override
     public void destroyNow() {
+    }
+
+    @Override
+    public void closeFuture() {
     }
 
 }
