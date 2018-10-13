@@ -29,7 +29,7 @@ public abstract class BusinessActivityLogger extends AbstractHulk {
 
     public abstract int updateBusinessActivityState(String businessActivityId, BusinessActivityStatus businessActivityStatus) throws SQLException;
 
-    public abstract HulkTransactionActivity getTranactionBusinessActivity(BusinessActivityId businessActivityId);
+    public abstract HulkTransactionActivity getTranactionBusinessActivity(BusinessActivityId businessActivityId) throws SQLException;
 
     public static String getBusinessActivityIdStr(BusinessActivityId businessActivityId) {
         if (null == businessActivityId) {

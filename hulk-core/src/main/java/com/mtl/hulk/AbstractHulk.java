@@ -35,4 +35,8 @@ public abstract class AbstractHulk implements Resource {
         this.properties = properties;
     }
 
+    public HulkProperties getProperties() {
+        return properties;
+    }
+
 }

@@ -5,11 +5,10 @@ import com.mtl.hulk.context.BusinessActivityContextHolder;
 import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.context.RuntimeContextHolder;
 import com.mtl.hulk.model.BusinessActivityStatus;
-import org.apache.commons.lang3.BooleanUtils;
 
 import java.util.concurrent.Callable;
 
-public class BusinessActivityExecutor implements Callable<Integer> {
+public class BusinessActivityExecutor implements Callable<Boolean> {
 
     private HulkContext ctx;
 
@@ -18,7 +17,7 @@ public class BusinessActivityExecutor implements Callable<Integer> {
     }
 
     @Override
-    public Integer call() throws Exception {
+    public Boolean call() throws Exception {
         RuntimeContextHolder.setContext(ctx.getRc());
         BusinessActivityContextHolder.setContext(ctx.getBac());
         boolean status = false;
@@ -28,28 +27,26 @@ public class BusinessActivityExecutor implements Callable<Integer> {
                 status = HulkResourceManager.getBam().commit();
                 if (status) {
                     RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITTED);
-                } else {
-                    RuntimeContextHolder.getContext().setException(null);
-                    status = HulkResourceManager.getBam().rollback();
-                    if (!status) {
-                        RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKING_FAILED);
-                    } else {
-                        RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKED);
-                    }
+                    return status;
                 }
-            } else {
-                RuntimeContextHolder.getContext().setException(null);
                 status = HulkResourceManager.getBam().rollback();
                 if (!status) {
                     RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKING_FAILED);
                 } else {
                     RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKED);
                 }
+                return status;
             }
+            status = HulkResourceManager.getBam().rollback();
+            if (!status) {
+                RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKING_FAILED);
+            } else {
+                RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKED);
+            }
+            return status;
         } catch (Exception ex) {
             throw ex;
         }
-        return BooleanUtils.toInteger(status);
     }
 
 }

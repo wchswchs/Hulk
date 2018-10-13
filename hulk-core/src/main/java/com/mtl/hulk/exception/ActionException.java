@@ -1,10 +1,10 @@
 package com.mtl.hulk.exception;
 
-public class ExecuteException extends RuntimeException {
+public class ActionException extends RuntimeException {
 
     private String action;
 
-    public ExecuteException(String action, Throwable cause) {
+    public ActionException(String action, Throwable cause) {
         super(cause);
         this.action = action;
     }

@@ -5,7 +5,7 @@ import com.mtl.hulk.AbstractHulk;
 import com.mtl.hulk.aop.interceptor.BrokerInterceptor;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
 import com.mtl.hulk.context.HulkContext;
-import com.mtl.hulk.exception.ExecuteException;
+import com.mtl.hulk.exception.ActionException;
 import com.mtl.hulk.listener.BusinessActivityListener;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.message.HulkErrorCode;
@@ -46,17 +46,11 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
                     if (tryResponse == null) {
                         return false;
                     }
-                    RuntimeContextHolder.getContext().getActivity().getAtomicTryActions().addAll(((HulkContext)tryResponse).getRc().getActivity().getAtomicTryActions());
-                    RuntimeContextHolder.getContext().getActivity().getAtomicCommitActions().addAll(((HulkContext)tryResponse).getRc().getActivity().getAtomicCommitActions());
-                    RuntimeContextHolder.getContext().getActivity().getAtomicRollbackActions().addAll(((HulkContext)tryResponse).getRc().getActivity().getAtomicRollbackActions());
-                    BusinessActivityContextHolder.getContext().getParams().putAll(((HulkContext)tryResponse).getBac().getParams());
+                    updateContext(tryResponse);
                 }
             }
         } catch (Throwable ex) {
-            RuntimeContextHolder.getContext().setException(new com.mtl.hulk.HulkException(HulkErrorCode.TRY_FAIL.getCode(),
-                    MessageFormat.format(HulkErrorCode.TRY_FAIL.getMessage(),
-                            RuntimeContextHolder.getContext().getActivity().getId().formatString(), methodInvocation.getMethod().getName())));
-            logger.error("Hulk Try Exception", ex);
+            logger.error("Try Request Exception", ex);
             return false;
         } finally {
             BrokerInterceptor.getTryFutures().clear();
@@ -69,12 +63,12 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
         RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITTING);
         try {
             return listener.process();
-        } catch (CancellationException ex) {
-            throw ex;
-        } catch (Exception ex) {
+        } catch (ActionException ex) {
             RuntimeContextHolder.getContext().setException(new com.mtl.hulk.HulkException(HulkErrorCode.COMMIT_FAIL.getCode(),
                     MessageFormat.format(HulkErrorCode.COMMIT_FAIL.getMessage(),
-                            RuntimeContextHolder.getContext().getActivity().getId().formatString(), ((ExecuteException) ex).getAction())));
+                            RuntimeContextHolder.getContext().getActivity().getId().formatString(), ex.getAction())));
+            throw ex;
+        } catch (CancellationException ex) {
             throw ex;
         }
     }
@@ -84,22 +78,29 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
         RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKING);
         try {
             return listener.process();
-        } catch (CancellationException ex) {
-            throw ex;
-        } catch (Exception ex) {
+        } catch (ActionException ex) {
             RuntimeContextHolder.getContext().setException(new com.mtl.hulk.HulkException(HulkErrorCode.ROLLBACK_FAIL.getCode(),
                     MessageFormat.format(HulkErrorCode.ROLLBACK_FAIL.getMessage(),
-                            RuntimeContextHolder.getContext().getActivity().getId().formatString(), ((ExecuteException) ex).getAction())));
+                            RuntimeContextHolder.getContext().getActivity().getId().formatString(), ex.getAction())));
+            throw ex;
+        } catch (CancellationException ex) {
             throw ex;
         }
     }
 
-    public BusinessActivityListener getListener() {
-        return listener;
+    private void updateContext(Object subContext) {
+        RuntimeContextHolder.getContext().getActivity().getAtomicTryActions().addAll(
+                ((HulkContext) subContext).getRc().getActivity().getAtomicTryActions());
+        RuntimeContextHolder.getContext().getActivity().getAtomicCommitActions().addAll(
+                ((HulkContext) subContext).getRc().getActivity().getAtomicCommitActions());
+        RuntimeContextHolder.getContext().getActivity().getAtomicRollbackActions().addAll(
+                ((HulkContext) subContext).getRc().getActivity().getAtomicRollbackActions());
+        BusinessActivityContextHolder.getContext().getParams().putAll(
+                ((HulkContext) subContext).getBac().getParams());
     }
 
-    public HulkProperties getProperties() {
-        return properties;
+    public BusinessActivityListener getListener() {
+        return listener;
     }
 
     public ExecutorService getLogExecutor() {

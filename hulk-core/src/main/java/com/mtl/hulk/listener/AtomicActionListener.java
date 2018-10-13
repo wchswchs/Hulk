@@ -3,7 +3,7 @@ package com.mtl.hulk.listener;
 import com.mtl.hulk.HulkListener;
 import com.mtl.hulk.HulkResourceManager;
 import com.mtl.hulk.context.*;
-import com.mtl.hulk.exception.ExecuteException;
+import com.mtl.hulk.exception.ActionException;
 import com.mtl.hulk.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,9 +41,9 @@ public class AtomicActionListener extends HulkListener {
                         return false;
                     }
                 } catch (InvocationTargetException ex) {
-                    throw new ExecuteException(action.getServiceOperation().getName(), ex);
+                    throw new ActionException(action.getServiceOperation().getName(), ex);
                 } catch (Exception ex) {
-                    throw new ExecuteException(action.getServiceOperation().getName(), ex);
+                    throw new ActionException(action.getServiceOperation().getName(), ex);
                 }
         }
         return true;
