@@ -4,9 +4,7 @@ import com.mtl.hulk.AbstractHulk;
 import com.mtl.hulk.BusinessActivityLogger;
 import com.mtl.hulk.BusinessActivityLoggerFactory;
 import com.mtl.hulk.configuration.HulkProperties;
-import com.mtl.hulk.context.BusinessActivityContextHolder;
 import com.mtl.hulk.context.HulkContext;
-import com.mtl.hulk.context.RuntimeContextHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,13 +20,14 @@ public class BusinessActivityLoggerThread extends AbstractHulk implements Runnab
         this.ctx = ctx;
     }
 
+    /**
+     * 异步记录事务日志
+     */
     @Override
     public void run() {
-        RuntimeContextHolder.setContext(ctx.getRc());
-        BusinessActivityContextHolder.setContext(ctx.getBac());
         BusinessActivityLogger bal = BusinessActivityLoggerFactory.getStorage(properties);
         try {
-            bal.write(RuntimeContextHolder.getContext(), BusinessActivityContextHolder.getContext());
+            bal.write(ctx.getRc(), ctx.getBac());
         } catch (SQLException e) {
             logger.error("Hulk Log Write Exception", e);
         }
@@ -40,6 +39,10 @@ public class BusinessActivityLoggerThread extends AbstractHulk implements Runnab
 
     @Override
     public void destroyNow() {
+    }
+
+    @Override
+    public void closeFuture() {
     }
 
 }

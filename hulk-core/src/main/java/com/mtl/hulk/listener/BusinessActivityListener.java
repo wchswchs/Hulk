@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.HulkListener;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
-import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.model.AtomicAction;
 import com.mtl.hulk.model.BusinessActivityStatus;
 import com.mtl.hulk.context.RuntimeContext;
@@ -21,18 +20,23 @@ public class BusinessActivityListener extends HulkListener {
 
     private final Logger logger = LoggerFactory.getLogger(BusinessActivityListener.class);
 
+    private static final List<Future> runFutures = new CopyOnWriteArrayList<Future>();
     private final ExecutorService runExecutor = new ThreadPoolExecutor(properties.getActionthreadPoolSize(),
                                                 Integer.MAX_VALUE, 10L,
                                                 TimeUnit.SECONDS, new SynchronousQueue<>(),
                                                 (new ThreadFactoryBuilder()).setNameFormat("Run-Thread-%d").build());
-    private volatile CompletableFuture<HulkContext> runFuture;
 
     public BusinessActivityListener(HulkProperties properties, ApplicationContext apc) {
         super(properties, apc);
     }
 
+    /**
+     * 执行一个事务方法集
+     * @return
+     * @throws Exception
+     */
     @Override
-    public boolean process() {
+    public boolean process() throws Exception {
         List<AtomicAction> currentActions = new CopyOnWriteArrayList<AtomicAction>();
         RuntimeContext context = RuntimeContextHolder.getContext();
         if (context.getActivity().getStatus() == BusinessActivityStatus.COMMITTING) {
@@ -41,46 +45,79 @@ public class BusinessActivityListener extends HulkListener {
         if (context.getActivity().getStatus() == BusinessActivityStatus.ROLLBACKING) {
             currentActions = context.getActivity().getAtomicRollbackActions();
         }
-        runFuture = CompletableFuture.completedFuture(
-                                        new HulkContext(BusinessActivityContextHolder.getContext(),
-                                        RuntimeContextHolder.getContext()));
-        for (int i = 0; i < context.getActivity().getAtomicTryActions().size(); i ++) {
-            AtomicActionListener listener = new AtomicActionListener(currentActions.get(i), applicationContext.get(),
-                                            context.getActivity().getAtomicTryActions().get(i));
-            listener.setProperties(properties);
-            listener.setApplicationContext(applicationContext.get());
-            boolean status = listener.process();
-            if (status == false) {
-                return false;
+        try {
+            for (int i = 0; i < context.getActivity().getAtomicTryActions().size(); i ++) {
+                AtomicActionListener listener = new AtomicActionListener(currentActions.get(i), applicationContext.get(),
+                        context.getActivity().getAtomicTryActions().get(i), BusinessActivityContextHolder.getContext());
+                listener.setProperties(properties);
+                listener.setApplicationContext(applicationContext.get());
+                Future<Boolean> runFuture = runExecutor.submit(new Callable<Boolean>() {
+                    /**
+                     * 异步执行事务方法
+                     * @return
+                     * @throws Exception
+                     */
+                        @Override
+                        public Boolean call() throws Exception {
+                            try {
+                                return listener.process();
+                            } catch (Exception e) {
+                                throw e;
+                            }
+                        }
+                });
+                runFutures.add(runFuture);
             }
-        }
-        HulkContext ret = runFuture.join();
-        if (ret.getRc().getException() != null && ret.getRc().getException().getCode() > 0) {
-            return false;
+            for (Future rf : runFutures) {
+                Object runResponse = rf.get();
+                if (runResponse == null) {
+                    return false;
+                }
+            }
+        } finally {
+            runFutures.clear();
         }
         return true;
+    }
+
+    public static List<Future> getRunFutures() {
+        return runFutures;
     }
 
     public ExecutorService getRunExecutor() {
         return runExecutor;
     }
 
-    public CompletableFuture<HulkContext> getRunFuture() {
-        return runFuture;
-    }
-
-    public void setRunFuture(CompletableFuture<HulkContext> runFuture) {
-        this.runFuture = runFuture;
-    }
-
     @Override
     public void destroy() {
-        FutureUtil.gracefulCancel(runFuture);
+        if (runFutures.size() > 0) {
+            for (Future runFuture : runFutures) {
+                FutureUtil.gracefulCancel(runFuture);
+            }
+            runFutures.clear();
+        }
+        runExecutor.shutdown();
     }
 
     @Override
     public void destroyNow() {
-        FutureUtil.cancelNow(runFuture);
+        if (runFutures.size() > 0) {
+            for (Future runFuture : runFutures) {
+                FutureUtil.cancelNow(runFuture);
+            }
+            runFutures.clear();
+        }
+        runExecutor.shutdownNow();
+    }
+
+    @Override
+    public void closeFuture() {
+        if (runFutures.size() > 0) {
+            for (Future runFuture : runFutures) {
+                FutureUtil.cancelNow(runFuture);
+            }
+            runFutures.clear();
+        }
     }
 
 }

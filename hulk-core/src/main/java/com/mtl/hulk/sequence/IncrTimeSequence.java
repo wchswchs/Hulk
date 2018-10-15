@@ -5,8 +5,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 生成事务ID
  * 64位ID (42(毫秒)+5(机器ID)+5(业务编码)+12(重复累加))
- */
+ **/
 public class IncrTimeSequence implements HulkSequence {
 
 	protected static final Logger LOGGER = LoggerFactory.getLogger(IncrTimeSequence.class);

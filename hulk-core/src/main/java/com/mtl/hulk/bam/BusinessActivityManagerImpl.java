@@ -2,24 +2,22 @@ package com.mtl.hulk.bam;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.AbstractHulk;
-import com.mtl.hulk.HulkException;
 import com.mtl.hulk.aop.interceptor.BrokerInterceptor;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
 import com.mtl.hulk.context.HulkContext;
+import com.mtl.hulk.exception.ActionException;
 import com.mtl.hulk.listener.BusinessActivityListener;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.message.HulkErrorCode;
 import com.mtl.hulk.model.BusinessActivityStatus;
 import com.mtl.hulk.context.RuntimeContextHolder;
 import com.mtl.hulk.tools.ExecutorUtil;
-import com.mtl.hulk.tools.FutureUtil;
 import org.aopalliance.intercept.MethodInvocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import java.text.MessageFormat;
-import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
@@ -28,7 +26,6 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
     private final Logger logger = LoggerFactory.getLogger(BusinessActivityManagerImpl.class);
 
     private final BusinessActivityListener listener;
-    private volatile CompletableFuture<Map<Integer, HulkContext>> tryFuture;
     private final ExecutorService logExecutor = new ThreadPoolExecutor(properties.getLogThreadPoolSize(),
                                         Integer.MAX_VALUE, 5L,
                                         TimeUnit.SECONDS, new SynchronousQueue<>(),
@@ -39,70 +36,90 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
         this.listener = new BusinessActivityListener(properties, applicationContext);
     }
 
+    /**
+     * 发起事务并获取Try预留资源
+     * @param methodInvocation
+     * @return 获取执行Try的状态
+     */
     @Override
     public boolean start(MethodInvocation methodInvocation) {
-        tryFuture = CompletableFuture.completedFuture(
-                new ConcurrentHashMap<Integer, HulkContext>());
-        boolean status = false;
         try {
-            BrokerInterceptor.setOrders(new CopyOnWriteArrayList<>());
             Object result = methodInvocation.proceed();
             if (RuntimeContextHolder.getContext().getActivity().getId() != null) {
-                Map<Integer, HulkContext> hc = tryFuture.join();
-                logger.info("Interceptor order map size: {}", BrokerInterceptor.getOrders().size());
-                if (hc != null && hc.size() > 0
-                        && BrokerInterceptor.getOrders() != null
-                        && BrokerInterceptor.getOrders().size() > 0) {
-                    for (int i = 0; i < BrokerInterceptor.getOrders().size(); i++) {
-                        if (hc.get(i) != null) {
-                            RuntimeContextHolder.getContext().getActivity().getAtomicTryActions()
-                                    .addAll(hc.get(i).getRc().getActivity().getAtomicTryActions());
-                            RuntimeContextHolder.getContext().getActivity().getAtomicCommitActions()
-                                    .addAll(hc.get(i).getRc().getActivity().getAtomicCommitActions());
-                            RuntimeContextHolder.getContext().getActivity().getAtomicRollbackActions()
-                                    .addAll(hc.get(i).getRc().getActivity().getAtomicRollbackActions());
-                            BusinessActivityContextHolder.getContext().getParams().putAll(hc.get(i)
-                                    .getBac().getParams());
-                        }
+                for (Future tryFuture : BrokerInterceptor.getTryFutures()) {
+                    Object tryResponse = tryFuture.get();
+                    if (tryResponse == null) {
+                        return false;
                     }
+                    updateContext(tryResponse);
                 }
-                status = true;
             }
         } catch (Throwable ex) {
-            RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.TRY_FAIL.getCode(),
-                    MessageFormat.format(HulkErrorCode.TRY_FAIL.getMessage(),
-                            RuntimeContextHolder.getContext().getActivity().getId().formatString(), methodInvocation.getMethod().getName())));
-            logger.error("Hulk Try Exception", ex);
+            logger.error("Try Request Exception", ex);
+            return false;
+        } finally {
+            BrokerInterceptor.getTryFutures().clear();
         }
-        return status;
+        return true;
     }
 
+    /**
+     * 发起事务提交
+     * @return 提交结果
+     * @throws Exception
+     */
     @Override
-    public boolean commit() {
+    public boolean commit() throws Exception {
         RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITTING);
-        return listener.process();
+        try {
+            return listener.process();
+        } catch (ActionException ex) {
+            RuntimeContextHolder.getContext().setException(new com.mtl.hulk.HulkException(HulkErrorCode.COMMIT_FAIL.getCode(),
+                    MessageFormat.format(HulkErrorCode.COMMIT_FAIL.getMessage(),
+                            RuntimeContextHolder.getContext().getActivity().getId().formatString(), ex.getAction())));
+            throw ex;
+        } catch (CancellationException ex) {
+            throw ex;
+        }
     }
 
+    /**
+     * 发起事务回滚
+     * @return 回滚结果
+     * @throws Exception
+     */
     @Override
-    public boolean rollback() {
+    public boolean rollback() throws Exception {
         RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKING);
-        return listener.process();
+        try {
+            return listener.process();
+        } catch (ActionException ex) {
+            RuntimeContextHolder.getContext().setException(new com.mtl.hulk.HulkException(HulkErrorCode.ROLLBACK_FAIL.getCode(),
+                    MessageFormat.format(HulkErrorCode.ROLLBACK_FAIL.getMessage(),
+                            RuntimeContextHolder.getContext().getActivity().getId().formatString(), ex.getAction())));
+            throw ex;
+        } catch (CancellationException ex) {
+            throw ex;
+        }
+    }
+
+    /**
+     * 合并Try预留资源
+     * @param subContext
+     */
+    private void updateContext(Object subContext) {
+        RuntimeContextHolder.getContext().getActivity().getAtomicTryActions().addAll(
+                ((HulkContext) subContext).getRc().getActivity().getAtomicTryActions());
+        RuntimeContextHolder.getContext().getActivity().getAtomicCommitActions().addAll(
+                ((HulkContext) subContext).getRc().getActivity().getAtomicCommitActions());
+        RuntimeContextHolder.getContext().getActivity().getAtomicRollbackActions().addAll(
+                ((HulkContext) subContext).getRc().getActivity().getAtomicRollbackActions());
+        BusinessActivityContextHolder.getContext().getParams().putAll(
+                ((HulkContext) subContext).getBac().getParams());
     }
 
     public BusinessActivityListener getListener() {
         return listener;
-    }
-
-    public HulkProperties getProperties() {
-        return properties;
-    }
-
-    public CompletableFuture<Map<Integer, HulkContext>> getTryFuture() {
-        return tryFuture;
-    }
-
-    public void setTryFuture(CompletableFuture<Map<Integer, HulkContext>> tryFuture) {
-        this.tryFuture = tryFuture;
     }
 
     public ExecutorService getLogExecutor() {
@@ -112,15 +129,17 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
     @Override
     public void destroy() {
         listener.destroy();
-        FutureUtil.gracefulCancel(tryFuture);
         ExecutorUtil.gracefulShutdown(logExecutor);
-        ExecutorUtil.shutdownNow(listener.getRunExecutor());
     }
 
     @Override
     public void destroyNow() {
         listener.destroyNow();
-        ExecutorUtil.shutdownNow(listener.getRunExecutor());
+        ExecutorUtil.shutdownNow(logExecutor);
+    }
+
+    @Override
+    public void closeFuture() {
     }
 
 }

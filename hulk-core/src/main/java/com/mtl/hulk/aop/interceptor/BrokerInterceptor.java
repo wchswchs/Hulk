@@ -2,14 +2,14 @@ package com.mtl.hulk.aop.interceptor;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.mtl.hulk.HulkException;
 import com.mtl.hulk.HulkInterceptor;
-import com.mtl.hulk.HulkResourceManager;
 import com.mtl.hulk.aop.HulkAspectSupport;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.*;
+import com.mtl.hulk.exception.ActionException;
 import com.mtl.hulk.message.HulkErrorCode;
 import com.mtl.hulk.tools.ExecutorUtil;
+import com.mtl.hulk.tools.FutureUtil;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.slf4j.Logger;
@@ -18,10 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class BrokerInterceptor extends HulkAspectSupport implements HulkInterceptor, MethodInterceptor, Serializable {
 
@@ -31,52 +28,72 @@ public class BrokerInterceptor extends HulkAspectSupport implements HulkIntercep
                             Integer.MAX_VALUE, 10L,
                             TimeUnit.SECONDS, new SynchronousQueue<>(),
                                     (new ThreadFactoryBuilder()).setNameFormat("Try-Thread-%d").build());
-    private static List<String> orders;
+    private static final List<Future> tryFutures = new CopyOnWriteArrayList<Future>();
 
     public BrokerInterceptor(HulkProperties properties) {
         super(properties);
     }
 
+    /**
+     * 通过发起方发起事务请求，异步远程调用Try接口
+     * @param methodInvocation
+     * @return
+     * @throws Throwable
+     */
     @Override
     public Object invoke(MethodInvocation methodInvocation) throws Throwable {
-        if (!orders.contains(methodInvocation.getMethod().getName())) {
-            orders.add(methodInvocation.getMethod().getName());
-        }
-        HulkResourceManager.getBam().setTryFuture(HulkResourceManager.getBam().getTryFuture().thenApplyAsync(am -> {
-            try {
-                String name = methodInvocation.getMethod().getName();
-                logger.info("Try request sending: {}", name);
-                Object result = methodInvocation.proceed();
-                HulkContext subBusinessActivity = JSONObject.parseObject((String) result, HulkContext.class);
-                am.put(orders.indexOf(name), subBusinessActivity);
-                return am;
-            } catch (Throwable t) {
-                logger.error("Broker Request Exception", t);
-                RuntimeContextHolder.getContext().setException(new HulkException(HulkErrorCode.TRY_FAIL.getCode(),
-                    MessageFormat.format(HulkErrorCode.TRY_FAIL.getMessage(),
-                            RuntimeContextHolder.getContext().getActivity().getId().formatString(), methodInvocation.getMethod().getName())));
+        Future<HulkContext> tryFuture = tryExecutor.submit(new Callable<HulkContext>() {
+            @Override
+            public HulkContext call() throws Exception {
+                logger.info("Try Request: {}", methodInvocation.getMethod().getName());
+                try {
+                    return JSONObject.parseObject((String)methodInvocation.proceed(), HulkContext.class);
+                } catch (Throwable t) {
+                    RuntimeContextHolder.getContext().setException(new com.mtl.hulk.HulkException(HulkErrorCode.TRY_FAIL.getCode(),
+                            MessageFormat.format(HulkErrorCode.TRY_FAIL.getMessage(),
+                                    RuntimeContextHolder.getContext().getActivity().getId().formatString(), methodInvocation.getMethod().getName())));
+                    throw new ActionException(methodInvocation.getMethod().getName(), t);
+                }
             }
-            return null;
-        }, tryExecutor));
+        });
+        tryFutures.add(tryFuture);
         return "ok";
     }
 
-    public static void setOrders(List<String> orders) {
-        BrokerInterceptor.orders = orders;
-    }
-
-    public static List<String> getOrders() {
-        return orders;
+    public static List<Future> getTryFutures() {
+        return tryFutures;
     }
 
     @Override
     public void destroy() {
-        orders.clear();
+        if (tryFutures.size() > 0) {
+            for (Future tryFuture : tryFutures) {
+                FutureUtil.gracefulCancel(tryFuture);
+            }
+            tryFutures.clear();
+        }
         ExecutorUtil.gracefulShutdown(tryExecutor);
     }
 
     @Override
     public void destroyNow() {
+        if (tryFutures.size() > 0) {
+            for (Future tryFuture : tryFutures) {
+                FutureUtil.cancelNow(tryFuture);
+            }
+            tryFutures.clear();
+        }
+        ExecutorUtil.shutdownNow(tryExecutor);
+    }
+
+    @Override
+    public void closeFuture() {
+        if (tryFutures.size() > 0) {
+            for (Future tryFuture : tryFutures) {
+                FutureUtil.cancelNow(tryFuture);
+            }
+            tryFutures.clear();
+        }
     }
 
 }

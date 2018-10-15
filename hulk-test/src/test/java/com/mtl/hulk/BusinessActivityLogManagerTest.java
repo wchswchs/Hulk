@@ -110,7 +110,7 @@ public class BusinessActivityLogManagerTest extends AbstractHulkTest {
     }
 
     @Test
-    public void getTranactionBusinessActivityList() {
+    public void getTranactionBusinessActivityList() throws SQLException {
         BusinessActivityLogger logger = BusinessActivityLoggerFactory.getStorage(properties);
         BusinessActivityId businessActivityId = new BusinessActivityId();
         businessActivityId.setSequence("1013652504641536");

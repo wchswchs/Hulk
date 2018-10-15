@@ -6,4 +6,6 @@ public interface Resource {
 
     void destroyNow();
 
+    void closeFuture();
+
 }

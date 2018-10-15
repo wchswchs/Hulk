@@ -5,8 +5,8 @@ import com.mtl.hulk.model.BusinessActivityStatus;
 
 public class HulkResponseFactory {
 
-    public static HulkResponse getResponse(Integer result) {
-        if (result == 1) {
+    public static HulkResponse getResponse(boolean result) {
+        if (result) {
             return new HulkResponse(0, RuntimeContextHolder.getContext().getActivity().getStatus().getDesc(), null);
         }
         if (RuntimeContextHolder.getContext().getActivity().getStatus() == BusinessActivityStatus.COMMITING_FAILED) {

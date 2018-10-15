@@ -53,8 +53,7 @@ public class MySQLLoggerStorage extends BusinessActivityLogger {
             }
             return false;
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            return false;
+            throw e;
         }
     }
 
@@ -91,8 +90,7 @@ public class MySQLLoggerStorage extends BusinessActivityLogger {
             }
             return hulkTransactionActivityList;
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            return null;
+            throw e;
         }
     }
 
@@ -112,8 +110,7 @@ public class MySQLLoggerStorage extends BusinessActivityLogger {
             }
             return 0;
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            return 0;
+            throw e;
         }
     }
 
@@ -133,8 +130,7 @@ public class MySQLLoggerStorage extends BusinessActivityLogger {
             }
             return false;
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            return false;
+            throw e;
         }
     }
 
@@ -151,13 +147,12 @@ public class MySQLLoggerStorage extends BusinessActivityLogger {
             }
             return 0;
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            return 0;
+            throw e;
         }
     }
 
     @Override
-    public HulkTransactionActivity getTranactionBusinessActivity(BusinessActivityId businessActivityId) {
+    public HulkTransactionActivity getTranactionBusinessActivity(BusinessActivityId businessActivityId) throws SQLException {
         String sql = "SELECT businessActivityId,businessActivityStatus,startTime,runtimeContext,businessActivityContext " +
                 "FROM tm_business_activity_log " +
                 "WHERE isDeleted = 0 and businessActivityStatus in ('8', '9') and businessActivityId in (?)";
@@ -187,8 +182,7 @@ public class MySQLLoggerStorage extends BusinessActivityLogger {
             }
             return hulkTransactionActivity;
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            return null;
+            throw e;
         }
     }
 
@@ -209,6 +203,10 @@ public class MySQLLoggerStorage extends BusinessActivityLogger {
 
     @Override
     public void destroyNow() {
+    }
+
+    @Override
+    public void closeFuture() {
     }
 
 }

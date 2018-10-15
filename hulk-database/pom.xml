@@ -9,7 +9,7 @@
         <version>1.0.1</version>
     </parent>
 
-    <artifactId>hulk-db</artifactId>
+    <artifactId>hulk-database</artifactId>
 
     <dependencyManagement>
         <dependencies>
