@@ -73,9 +73,7 @@ public class BusinessActivityRestorer {
 
     private int getRetryCount(String businessActivityIdStr) {
         if (!map.containsKey(businessActivityIdStr)) {
-            if (!map.containsKey(businessActivityIdStr)) {
-                map.put(businessActivityIdStr, new AtomicInteger(0));
-            }
+            map.put(businessActivityIdStr, new AtomicInteger(0));
         }
         return map.get(businessActivityIdStr).incrementAndGet();
     }
