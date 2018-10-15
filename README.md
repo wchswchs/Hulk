@@ -21,6 +21,10 @@
 
 使用代码中请求serviceA，将调用serviceB和serviceC
 
+1. 添加配置文件：/opt/hulk/hulk_global.properties，内容如下：
+   eureka.serviceUrl.defaultZone=http://localhost:8761/eureka/
+2. 添加配置：/opt/hulk/hulk.properties，内容详见下面的配置说明
+
 ### 通讯方式自定义
 
 #### 实现远程通讯接口NetworkCommunication
