@@ -3,7 +3,7 @@ package com.mtl.hulk.model;
 public enum BusinessActivityIsolationLevel {
 
     READ_UNCOMMITTED(1),
-    Read_COMMITED(2),
+    READ_COMMITED(2),
     REPEATABLE_READ(3),
     SERIALIZABLE(4);
 

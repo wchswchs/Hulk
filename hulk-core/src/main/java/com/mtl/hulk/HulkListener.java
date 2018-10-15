@@ -18,6 +18,10 @@ public abstract class HulkListener extends AbstractHulk {
         this.action = null;
     }
 
+    public AtomicAction getAction() {
+        return action;
+    }
+
     public abstract boolean process() throws Exception;
 
 }

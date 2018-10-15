@@ -150,6 +150,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
             id.setSequence(String.valueOf(BusinessActivityIdSequenceFactory.getSequence(properties.getTransIdSequence()).nextId()));
             activity.setId(id);
             activity.setTimeout(activityAnnotation.timeout());
+            activity.setIsolationLevel(activityAnnotation.isolationLevel());
         }
         activity.setStatus(BusinessActivityStatus.TRYING);
 

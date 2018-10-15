@@ -12,6 +12,7 @@ public class BusinessActivity {
     private List<AtomicAction> atomicCommitActions = new CopyOnWriteArrayList<>();
     private List<AtomicAction> atomicRollbackActions = new CopyOnWriteArrayList<>();
     private BusinessActivityId pid = null;
+    private BusinessActivityIsolationLevel isolationLevel;
     private long timeout;
     private BusinessActivityStatus status;
     private Date startTime = Calendar.getInstance().getTime();
@@ -54,6 +55,14 @@ public class BusinessActivity {
 
     public List<AtomicAction> getAtomicRollbackActions() {
         return atomicRollbackActions;
+    }
+
+    public BusinessActivityIsolationLevel getIsolationLevel() {
+        return isolationLevel;
+    }
+
+    public void setIsolationLevel(BusinessActivityIsolationLevel isolationLevel) {
+        this.isolationLevel = isolationLevel;
     }
 
     public BusinessActivityId getPid() {

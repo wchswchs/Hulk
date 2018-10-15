@@ -6,8 +6,8 @@ import org.springframework.context.ApplicationContext;
 
 public abstract class AbstractHulk implements Resource {
 
-    protected volatile HulkProperties properties;
-    protected volatile ApplicationContext applicationContext;
+    protected HulkProperties properties;
+    protected ApplicationContext applicationContext;
 
     public AbstractHulk(HulkProperties properties, ApplicationContext applicationContext) {
         this.properties = properties;
@@ -23,6 +23,10 @@ public abstract class AbstractHulk implements Resource {
     }
 
     public AbstractHulk() {
+    }
+
+    public ApplicationContext getApplicationContext() {
+        return applicationContext;
     }
 
     public void setApplicationContext(ApplicationContext applicationContext) {
