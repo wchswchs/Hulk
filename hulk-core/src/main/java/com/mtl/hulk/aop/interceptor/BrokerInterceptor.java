@@ -34,6 +34,12 @@ public class BrokerInterceptor extends HulkAspectSupport implements HulkIntercep
         super(properties);
     }
 
+    /**
+     * 通过发起方发起事务请求，异步远程调用Try接口
+     * @param methodInvocation
+     * @return
+     * @throws Throwable
+     */
     @Override
     public Object invoke(MethodInvocation methodInvocation) throws Throwable {
         Future<HulkContext> tryFuture = tryExecutor.submit(new Callable<HulkContext>() {

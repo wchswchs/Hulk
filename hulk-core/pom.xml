@@ -25,7 +25,7 @@
             </dependency>
             <dependency>
                 <groupId>com.mtl.hulk</groupId>
-                <artifactId>hulk-db</artifactId>
+                <artifactId>hulk-database</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -51,7 +51,7 @@
         </dependency>
         <dependency>
             <groupId>com.mtl.hulk</groupId>
-            <artifactId>hulk-db</artifactId>
+            <artifactId>hulk-database</artifactId>
         </dependency>
         <dependency>
             <groupId>com.mtl.hulk</groupId>

@@ -30,6 +30,11 @@ public class BusinessActivityListener extends HulkListener {
         super(properties, apc);
     }
 
+    /**
+     * 执行一个事务方法集
+     * @return
+     * @throws Exception
+     */
     @Override
     public boolean process() throws Exception {
         List<AtomicAction> currentActions = new CopyOnWriteArrayList<AtomicAction>();
@@ -47,6 +52,11 @@ public class BusinessActivityListener extends HulkListener {
                 listener.setProperties(properties);
                 listener.setApplicationContext(applicationContext.get());
                 Future<Boolean> runFuture = runExecutor.submit(new Callable<Boolean>() {
+                    /**
+                     * 异步执行事务方法
+                     * @return
+                     * @throws Exception
+                     */
                         @Override
                         public Boolean call() throws Exception {
                             try {

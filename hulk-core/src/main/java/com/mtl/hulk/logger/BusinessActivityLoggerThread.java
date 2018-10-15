@@ -20,6 +20,9 @@ public class BusinessActivityLoggerThread extends AbstractHulk implements Runnab
         this.ctx = ctx;
     }
 
+    /**
+     * 异步记录事务日志
+     */
     @Override
     public void run() {
         BusinessActivityLogger bal = BusinessActivityLoggerFactory.getStorage(properties);

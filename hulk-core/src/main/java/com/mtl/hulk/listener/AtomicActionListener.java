@@ -24,6 +24,11 @@ public class AtomicActionListener extends HulkListener {
         this.bac = bac;
     }
 
+    /**
+     * 事务方法执行
+     * @return
+     * @throws Exception
+     */
     @Override
     public boolean process() throws Exception {
         if (action.getServiceOperation().getType() == ServiceOperationType.TCC) {

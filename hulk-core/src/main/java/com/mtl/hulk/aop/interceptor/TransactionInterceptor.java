@@ -37,6 +37,12 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
         super(properties, apc);
     }
 
+    /**
+     * Try请求拦截处理
+     * @param methodInvocation
+     * @return
+     * @throws Throwable
+     */
     @Override
     public Object invoke(MethodInvocation methodInvocation) throws Throwable {
         if (!prepareContext(methodInvocation)) {
@@ -81,7 +87,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
                                     new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext())));
             response = HulkResponseFactory.getResponse(status);
         } catch (Exception ex) {
-            logger.error("Transaction Interceptor Error", ex);
+            logger.error("Transaction Execute Error", ex);
             RuntimeContextHolder.getContext().setException(new HulkException(
                     HulkErrorCode.RUN_EXCEPTION.getCode(),
                     HulkErrorCode.RUN_EXCEPTION.getMessage()));

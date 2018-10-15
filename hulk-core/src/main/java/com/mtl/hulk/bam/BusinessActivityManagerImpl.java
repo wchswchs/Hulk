@@ -36,6 +36,11 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
         this.listener = new BusinessActivityListener(properties, applicationContext);
     }
 
+    /**
+     * 发起事务并获取Try预留资源
+     * @param methodInvocation
+     * @return 获取执行Try的状态
+     */
     @Override
     public boolean start(MethodInvocation methodInvocation) {
         try {
@@ -58,6 +63,11 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
         return true;
     }
 
+    /**
+     * 发起事务提交
+     * @return 提交结果
+     * @throws Exception
+     */
     @Override
     public boolean commit() throws Exception {
         RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.COMMITTING);
@@ -73,6 +83,11 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
         }
     }
 
+    /**
+     * 发起事务回滚
+     * @return 回滚结果
+     * @throws Exception
+     */
     @Override
     public boolean rollback() throws Exception {
         RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.ROLLBACKING);
@@ -88,6 +103,10 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
         }
     }
 
+    /**
+     * 合并Try预留资源
+     * @param subContext
+     */
     private void updateContext(Object subContext) {
         RuntimeContextHolder.getContext().getActivity().getAtomicTryActions().addAll(
                 ((HulkContext) subContext).getRc().getActivity().getAtomicTryActions());

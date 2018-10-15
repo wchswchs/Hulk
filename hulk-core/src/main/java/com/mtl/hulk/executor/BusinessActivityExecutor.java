@@ -16,6 +16,11 @@ public class BusinessActivityExecutor implements Callable<Boolean> {
         this.ctx = ctx;
     }
 
+    /**
+     * 异步发起事务
+     * @return
+     * @throws Exception
+     */
     @Override
     public Boolean call() throws Exception {
         RuntimeContextHolder.setContext(ctx.getRc());
