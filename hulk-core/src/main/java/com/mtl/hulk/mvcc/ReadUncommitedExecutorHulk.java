@@ -19,8 +19,8 @@ public class ReadUncommitedExecutorHulk extends HulkMvccExecutor {
         logger.info("Transaction Executor running: {}", listener.getAction().getServiceOperation().getName());
         initMethod(listener);
         try {
-            Method method = object.get().getClass().getMethod(listener.getAction().getServiceOperation().getName(), BusinessActivityContext.class);
-            return (boolean) method.invoke(object.get(), args.get());
+            Method method = obj.get().getClass().getMethod(listener.getAction().getServiceOperation().getName(), BusinessActivityContext.class);
+            return (boolean) method.invoke(obj.get(), args.get());
         } catch (InvocationTargetException ex) {
             throw new ActionException(listener.getAction().getServiceOperation().getName(), ex);
         } catch (Exception ex) {

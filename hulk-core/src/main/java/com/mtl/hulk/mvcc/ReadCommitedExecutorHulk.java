@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ReadCommitedExecutorHulk extends HulkMvccExecutor {
 
@@ -20,17 +21,20 @@ public class ReadCommitedExecutorHulk extends HulkMvccExecutor {
         logger.info("Transaction Executor running: {}", listener.getAction().getServiceOperation().getName());
         initMethod(listener);
         long currentVersion = IncrTimeSequence.getInstance().nextId();
-        snapshots.get(lockKey.get()).add(currentVersion);
+        if (snapshots.get(actionKey.get()) == null) {
+            snapshots.put(actionKey.get(), new CopyOnWriteArrayList<Long>());
+        }
+        snapshots.get(actionKey.get()).add(currentVersion);
         versionMap.put(currentVersion, args.get());
-        if (currentVersion > snapshots.get(lockKey.get()).get(0)) {
-            currentVersion = snapshots.get(lockKey.get()).get(snapshots.get(lockKey.get()).size() - 1);
+        if (currentVersion > snapshots.get(actionKey.get()).get(0)) {
+            currentVersion = snapshots.get(actionKey.get()).get(snapshots.get(actionKey.get()).size() - 1);
         }
         try {
-            Object args = versionMap.get(currentVersion);
-            Method method = object.get().getClass().getMethod(listener.getAction().getServiceOperation().getName(), BusinessActivityContext.class);
-            boolean ret = (boolean) method.invoke(object.get(), args);
+            Object methodArgs = versionMap.get(currentVersion);
+            Method method = obj.get().getClass().getMethod(listener.getAction().getServiceOperation().getName(), BusinessActivityContext.class);
+            boolean ret = (boolean) method.invoke(obj.get(), methodArgs);
             if (ret) {
-                snapshots.get(lockKey.get()).remove(currentVersion);
+                snapshots.get(actionKey.get()).remove(currentVersion);
             }
             return ret;
         } catch (InvocationTargetException ex) {

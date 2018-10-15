@@ -2,6 +2,7 @@ package com.mtl.hulk.listener;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.HulkListener;
+import com.mtl.hulk.HulkMvccExecutor;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
 import com.mtl.hulk.model.AtomicAction;
@@ -15,12 +16,14 @@ import org.springframework.context.ApplicationContext;
 
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class BusinessActivityListener extends HulkListener {
 
     private final Logger logger = LoggerFactory.getLogger(BusinessActivityListener.class);
 
     private static final List<Future> runFutures = new CopyOnWriteArrayList<Future>();
+    private AtomicReference<HulkMvccExecutor> executor = new AtomicReference<HulkMvccExecutor>();
     private final ExecutorService runExecutor = new ThreadPoolExecutor(properties.getActionthreadPoolSize(),
                                                 Integer.MAX_VALUE, 10L,
                                                 TimeUnit.SECONDS, new SynchronousQueue<>(),
@@ -53,19 +56,19 @@ public class BusinessActivityListener extends HulkListener {
                 listener.setProperties(properties);
                 listener.setApplicationContext(applicationContext);
                 Future<Boolean> runFuture = runExecutor.submit(new Callable<Boolean>() {
-                        /**
-                         * 异步执行事务方法
-                         * @return
-                         * @throws Exception
-                         */
-                        @Override
-                        public Boolean call() throws Exception {
-                            try {
-                                return listener.process();
-                            } catch (Exception e) {
-                                throw e;
-                            }
+                    /**
+                     * 异步执行事务方法
+                     * @return
+                     * @throws Exception
+                     */
+                    @Override
+                    public Boolean call() throws Exception {
+                        try {
+                            return listener.process();
+                        } catch (Exception e) {
+                            throw e;
                         }
+                    }
                 });
                 runFutures.add(runFuture);
             }
@@ -77,6 +80,7 @@ public class BusinessActivityListener extends HulkListener {
             }
         } finally {
             runFutures.clear();
+            getExecutor().clear();
         }
         return true;
     }
@@ -87,6 +91,14 @@ public class BusinessActivityListener extends HulkListener {
 
     public ExecutorService getRunExecutor() {
         return runExecutor;
+    }
+
+    public HulkMvccExecutor getExecutor() {
+        return executor.get();
+    }
+
+    public void setExecutor(HulkMvccExecutor executor) {
+        this.executor.set(executor);
     }
 
     @Override

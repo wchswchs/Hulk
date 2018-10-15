@@ -12,9 +12,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class HulkMvccExecutor {
 
-    protected AtomicReference<Object> object = new AtomicReference<Object>();
+    protected AtomicReference<Object> obj = new AtomicReference<Object>();
     protected AtomicReference<Object> args = new AtomicReference<Object>();
-    protected AtomicReference<String> lockKey = new AtomicReference<String>();
+    protected AtomicReference<String> actionKey = new AtomicReference<String>();
     protected Map<String, CopyOnWriteArrayList<Long>> snapshots = new HashMap<String, CopyOnWriteArrayList<Long>>();
     protected Map<Long, Object> versionMap = new HashMap<Long, Object>();
 
@@ -25,16 +25,22 @@ public abstract class HulkMvccExecutor {
         AtomicAction tryAction = listener.getTryAction();
         AtomicAction action = listener.getAction();
         if (apc.getId().split(":")[0].equals(action.getServiceOperation().getService())) {
-            object.set(apc.getBean(tryAction.getServiceOperation().getBeanClass()));
+            obj.set(apc.getBean(tryAction.getServiceOperation().getBeanClass()));
         } else {
-            object.set(HulkResourceManager.getClients().get(action.getServiceOperation().getService()));
+            obj.set(HulkResourceManager.getClients().get(action.getServiceOperation().getService()));
         }
-        lockKey.set("Transaction_" + hc.getActivity().getId().getSequence()
+        String[] aid = hc.getActivity().getId().formatString().split("_");
+        actionKey.set("Transaction_" + aid[0] + "_" + aid[1]
                 + "_" + action.getServiceOperation().getName());
     }
 
     public Map<String, CopyOnWriteArrayList<Long>> getSnapshots() {
         return snapshots;
+    }
+
+    public void clear() {
+        versionMap.clear();
+        snapshots.clear();
     }
 
     public abstract boolean run(AtomicActionListener listener);

@@ -1,8 +1,7 @@
 package com.mtl.hulk.listener;
 
 import com.mtl.hulk.HulkListener;
-import com.mtl.hulk.HulkMvccFactory;
-import com.mtl.hulk.HulkMvccExecutor;
+import com.mtl.hulk.HulkResourceManager;
 import com.mtl.hulk.context.*;
 import com.mtl.hulk.model.*;
 import org.slf4j.Logger;
@@ -16,7 +15,8 @@ public class AtomicActionListener extends HulkListener {
     private final RuntimeContext hc;
     private final Logger logger = LoggerFactory.getLogger(AtomicActionListener.class);
 
-    public AtomicActionListener(AtomicAction action, ApplicationContext applicationContext, AtomicAction tryAction, BusinessActivityContext bac, RuntimeContext hc) {
+    public AtomicActionListener(AtomicAction action, ApplicationContext applicationContext, AtomicAction tryAction,
+                                BusinessActivityContext bac, RuntimeContext hc) {
         super(action, applicationContext);
         this.tryAction = tryAction;
         this.bac = bac;
@@ -31,8 +31,7 @@ public class AtomicActionListener extends HulkListener {
     @Override
     public boolean process() throws Exception {
         if (action.getServiceOperation().getType() == ServiceOperationType.TCC) {
-            HulkMvccExecutor executor = HulkMvccFactory.getExecuter(hc.getActivity().getIsolationLevel());
-            return executor.run(this);
+            return HulkResourceManager.getBam().getListener().getExecutor().run(this);
         }
         return false;
     }
