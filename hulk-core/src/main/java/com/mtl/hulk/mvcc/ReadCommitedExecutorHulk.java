@@ -22,7 +22,7 @@ public class ReadCommitedExecutorHulk extends HulkMvccExecutor {
         initMethod(listener);
         try {
             Method method = object.get().getClass().getMethod(listener.getAction().getServiceOperation().getName(), BusinessActivityContext.class);
-            synchronized (snapshot) {
+            synchronized (snapshot.get(lockKey.get())) {
                 boolean ret = (boolean) method.invoke(object.get(), args.get());
                 snapshot.put(lockKey.get(), ret);
                 return ret;
