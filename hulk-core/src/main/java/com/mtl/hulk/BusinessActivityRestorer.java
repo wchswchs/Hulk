@@ -55,7 +55,8 @@ public class BusinessActivityRestorer {
                     logger.error(String.format("recover failed with max retry count,will not try again" + "retried count:%d", retryCount));
                     continue;
                 }
-                if (hulkTransactionActivity.getBusinessActivity().getStatus().getCode() < BusinessActivityStatus.COMMITTED.getCode()
+                if (hulkTransactionActivity.getBusinessActivity().getStatus() ==  BusinessActivityStatus.COMMITTING
+                    || hulkTransactionActivity.getBusinessActivity().getStatus() == BusinessActivityStatus.COMMITING_FAILED
                     || hulkTransactionActivity.getBusinessActivity().getStatus() == BusinessActivityStatus.ROLLBACKED) {
                     bam.commit();
                 } else if (hulkTransactionActivity.getBusinessActivity().getStatus() == BusinessActivityStatus.ROLLBACKING
