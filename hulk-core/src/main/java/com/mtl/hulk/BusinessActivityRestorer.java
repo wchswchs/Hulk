@@ -32,6 +32,9 @@ public class BusinessActivityRestorer {
     private HulkProperties properties;
     private final Map<String, AtomicInteger> map = new HashMap<String, AtomicInteger>();
 
+    /**
+     * 事务补偿
+     */
     public void run() {
         BusinessActivityLogger businessActivityLogger = BusinessActivityLoggerFactory.getStorage(properties);
         int retryTranactionCount = properties.getRetryTranactionCount();
