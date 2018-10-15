@@ -50,9 +50,6 @@ public class BusinessActivityListener extends HulkListener {
                 AtomicActionListener listener = new AtomicActionListener(currentActions.get(i), applicationContext,
                         context.getActivity().getAtomicTryActions().get(i), BusinessActivityContextHolder.getContext(),
                         context);
-                String actionKey = "Transaction_" + context.getActivity().getId().getSequence()
-                        + "_" + currentActions.get(i).getServiceOperation().getName();
-                listener.getSnapshot().put(actionKey, false);
                 listener.setProperties(properties);
                 listener.setApplicationContext(applicationContext);
                 Future<Boolean> runFuture = runExecutor.submit(new Callable<Boolean>() {

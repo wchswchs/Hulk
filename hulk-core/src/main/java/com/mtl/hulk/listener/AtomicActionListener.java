@@ -11,13 +11,14 @@ import org.springframework.context.ApplicationContext;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class AtomicActionListener extends HulkListener {
 
     private final AtomicAction tryAction;
     private final BusinessActivityContext bac;
     private final RuntimeContext hc;
-    private Map<String, Boolean> snapshot = new HashMap<String, Boolean>();
+    private Map<String, CopyOnWriteArrayList<Long>> snapshots = new HashMap<String, CopyOnWriteArrayList<Long>>();
     private final Logger logger = LoggerFactory.getLogger(AtomicActionListener.class);
 
     public AtomicActionListener(AtomicAction action, ApplicationContext applicationContext, AtomicAction tryAction, BusinessActivityContext bac, RuntimeContext hc) {
@@ -41,8 +42,8 @@ public class AtomicActionListener extends HulkListener {
         return false;
     }
 
-    public Map<String, Boolean> getSnapshot() {
-        return snapshot;
+    public Map<String, CopyOnWriteArrayList<Long>> getSnapshots() {
+        return snapshots;
     }
 
     public AtomicAction getTryAction() {
