@@ -165,7 +165,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
         AtomicAction confirmAction = new AtomicAction();
         ServiceOperation confirmServiceOperation = new ServiceOperation();
         confirmServiceOperation.setName(transaction.confirmMethod());
-        confirmServiceOperation.setService(applicationContext.get().getId().split(":")[0]);
+        confirmServiceOperation.setService(applicationContext.getId().split(":")[0]);
         confirmServiceOperation.setType(ServiceOperationType.TCC);
         confirmAction.setServiceOperation(confirmServiceOperation);
         confirmAction.setCallType(transaction.callType());
@@ -174,7 +174,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
         AtomicAction cancelAction = new AtomicAction();
         ServiceOperation cancelServiceOperation = new ServiceOperation();
         cancelServiceOperation.setName(transaction.cancelMethod());
-        cancelServiceOperation.setService(applicationContext.get().getId().split(":")[0]);
+        cancelServiceOperation.setService(applicationContext.getId().split(":")[0]);
         cancelServiceOperation.setType(ServiceOperationType.TCC);
         cancelAction.setServiceOperation(cancelServiceOperation);
         cancelAction.setCallType(transaction.callType());

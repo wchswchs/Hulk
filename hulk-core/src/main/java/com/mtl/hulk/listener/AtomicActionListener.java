@@ -34,8 +34,8 @@ public class AtomicActionListener extends HulkListener {
         if (action.getServiceOperation().getType() == ServiceOperationType.TCC) {
                 Object object = null;
                 try {
-                    if (applicationContext.get().getId().split(":")[0].equals(action.getServiceOperation().getService())) {
-                        object = applicationContext.get().getBean(tryAction.getServiceOperation().getBeanClass());
+                    if (applicationContext.getId().split(":")[0].equals(action.getServiceOperation().getService())) {
+                        object = applicationContext.getBean(tryAction.getServiceOperation().getBeanClass());
                     } else {
                         object = HulkResourceManager.getClients().get(action.getServiceOperation().getService());
                     }

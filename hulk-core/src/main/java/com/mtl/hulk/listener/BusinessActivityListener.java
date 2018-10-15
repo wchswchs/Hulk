@@ -47,10 +47,10 @@ public class BusinessActivityListener extends HulkListener {
         }
         try {
             for (int i = 0; i < context.getActivity().getAtomicTryActions().size(); i ++) {
-                AtomicActionListener listener = new AtomicActionListener(currentActions.get(i), applicationContext.get(),
+                AtomicActionListener listener = new AtomicActionListener(currentActions.get(i), applicationContext,
                         context.getActivity().getAtomicTryActions().get(i), BusinessActivityContextHolder.getContext());
                 listener.setProperties(properties);
-                listener.setApplicationContext(applicationContext.get());
+                listener.setApplicationContext(applicationContext);
                 Future<Boolean> runFuture = runExecutor.submit(new Callable<Boolean>() {
                         /**
                          * 异步执行事务方法
