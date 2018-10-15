@@ -9,16 +9,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 public class AtomicActionListener extends HulkListener {
 
     private final AtomicAction tryAction;
     private final BusinessActivityContext bac;
     private final RuntimeContext hc;
-    private Map<String, CopyOnWriteArrayList<Long>> snapshots = new HashMap<String, CopyOnWriteArrayList<Long>>();
     private final Logger logger = LoggerFactory.getLogger(AtomicActionListener.class);
 
     public AtomicActionListener(AtomicAction action, ApplicationContext applicationContext, AtomicAction tryAction, BusinessActivityContext bac, RuntimeContext hc) {
@@ -40,10 +35,6 @@ public class AtomicActionListener extends HulkListener {
             return executor.run(this);
         }
         return false;
-    }
-
-    public Map<String, CopyOnWriteArrayList<Long>> getSnapshots() {
-        return snapshots;
     }
 
     public AtomicAction getTryAction() {
