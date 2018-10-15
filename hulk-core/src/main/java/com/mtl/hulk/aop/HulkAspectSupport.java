@@ -46,9 +46,9 @@ public abstract class HulkAspectSupport extends AbstractHulk implements Initiali
 
     @Override
     public void afterPropertiesSet() {
-        if (applicationContext.get() != null) {
-            NetworkCommunication nc = applicationContext.get().getBean(NetworkCommunication.class);
-            Map<String, Object> providers = nc.getProviders(applicationContext.get());
+        if (applicationContext != null) {
+            NetworkCommunication nc = applicationContext.getBean(NetworkCommunication.class);
+            Map<String, Object> providers = nc.getProviders(applicationContext);
             for (Map.Entry provider : providers.entrySet()) {
                 HulkResourceManager.getClients().put((String) provider.getKey(), provider.getValue());
             }

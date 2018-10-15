@@ -32,6 +32,9 @@ public class BusinessActivityRestorer {
     private HulkProperties properties;
     private final Map<String, AtomicInteger> map = new HashMap<String, AtomicInteger>();
 
+    /**
+     * 事务补偿
+     */
     public void run() {
         BusinessActivityLogger businessActivityLogger = BusinessActivityLoggerFactory.getStorage(properties);
         int retryTranactionCount = properties.getRetryTranactionCount();
@@ -52,7 +55,8 @@ public class BusinessActivityRestorer {
                     logger.error(String.format("recover failed with max retry count,will not try again" + "retried count:%d", retryCount));
                     continue;
                 }
-                if (hulkTransactionActivity.getBusinessActivity().getStatus().getCode() < BusinessActivityStatus.COMMITTED.getCode()
+                if (hulkTransactionActivity.getBusinessActivity().getStatus() ==  BusinessActivityStatus.COMMITTING
+                    || hulkTransactionActivity.getBusinessActivity().getStatus() == BusinessActivityStatus.COMMITING_FAILED
                     || hulkTransactionActivity.getBusinessActivity().getStatus() == BusinessActivityStatus.ROLLBACKED) {
                     bam.commit();
                 } else if (hulkTransactionActivity.getBusinessActivity().getStatus() == BusinessActivityStatus.ROLLBACKING
@@ -70,9 +74,7 @@ public class BusinessActivityRestorer {
 
     private int getRetryCount(String businessActivityIdStr) {
         if (!map.containsKey(businessActivityIdStr)) {
-            if (!map.containsKey(businessActivityIdStr)) {
-                map.put(businessActivityIdStr, new AtomicInteger(0));
-            }
+            map.put(businessActivityIdStr, new AtomicInteger(0));
         }
         return map.get(businessActivityIdStr).incrementAndGet();
     }

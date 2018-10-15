@@ -18,7 +18,7 @@ import org.springframework.context.annotation.PropertySource;
 @EnableDiscoveryClient
 @EnableEurekaClient
 @ComponentScan({"com.mtl.hulk", "com.mtl.demo.serviceA"})
-@PropertySource({"file:/opt/hulk/hulk_global_test.properties", "file:/opt/hulk/hulk.properties"})
+@PropertySource({"file:/opt/hulk/hulk_global.properties", "file:/opt/hulk/hulk.properties"})
 public class ServiceAApplication {
     public static void main(String[] args) {
         SpringApplication.run(ServiceAApplication.class, args);

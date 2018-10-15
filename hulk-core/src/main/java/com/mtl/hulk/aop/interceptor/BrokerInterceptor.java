@@ -7,7 +7,6 @@ import com.mtl.hulk.aop.HulkAspectSupport;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.*;
 import com.mtl.hulk.exception.ActionException;
-import com.mtl.hulk.message.HulkErrorCode;
 import com.mtl.hulk.tools.ExecutorUtil;
 import com.mtl.hulk.tools.FutureUtil;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -16,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.text.MessageFormat;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -49,9 +47,9 @@ public class BrokerInterceptor extends HulkAspectSupport implements HulkIntercep
                 try {
                     return JSONObject.parseObject((String)methodInvocation.proceed(), HulkContext.class);
                 } catch (Throwable t) {
-                    RuntimeContextHolder.getContext().setException(new com.mtl.hulk.HulkException(HulkErrorCode.TRY_FAIL.getCode(),
-                            MessageFormat.format(HulkErrorCode.TRY_FAIL.getMessage(),
-                                    RuntimeContextHolder.getContext().getActivity().getId().formatString(), methodInvocation.getMethod().getName())));
+//                    RuntimeContextHolder.getContext().setException(new com.mtl.hulk.HulkException(HulkErrorCode.TRY_FAIL.getCode(),
+//                            MessageFormat.format(HulkErrorCode.TRY_FAIL.getMessage(),
+//                                    RuntimeContextHolder.getContext().getActivity().getId().formatString(), methodInvocation.getMethod().getName())));
                     throw new ActionException(methodInvocation.getMethod().getName(), t);
                 }
             }
