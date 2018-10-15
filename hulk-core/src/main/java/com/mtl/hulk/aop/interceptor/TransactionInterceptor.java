@@ -67,6 +67,9 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
                 future = transactionExecutor.submit(new BusinessActivityExecutor(new HulkContext(BusinessActivityContextHolder.getContext(),
                         RuntimeContextHolder.getContext())));
                 timeoutScheduledExecutorService.schedule(new Runnable() {
+                    /**
+                     * 事务执行超时监控
+                     */
                     @Override
                     public void run() {
                         if (!future.isDone()) {

@@ -52,11 +52,11 @@ public class BusinessActivityListener extends HulkListener {
                 listener.setProperties(properties);
                 listener.setApplicationContext(applicationContext.get());
                 Future<Boolean> runFuture = runExecutor.submit(new Callable<Boolean>() {
-                    /**
-                     * 异步执行事务方法
-                     * @return
-                     * @throws Exception
-                     */
+                        /**
+                         * 异步执行事务方法
+                         * @return
+                         * @throws Exception
+                         */
                         @Override
                         public Boolean call() throws Exception {
                             try {
