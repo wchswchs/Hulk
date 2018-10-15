@@ -1,11 +1,10 @@
 package com.mtl.hulk.model;
 
-public class AtomicAction implements Comparable<AtomicAction> {
+public class AtomicAction {
 
     private String id;
     private AtomicActionCallType callType;
     private ServiceOperation serviceOperation;
-    private Integer order = -1;
 
     public void setId(String id) {
         this.id = id;
@@ -29,19 +28,6 @@ public class AtomicAction implements Comparable<AtomicAction> {
 
     public String getId() {
         return id;
-    }
-
-    public void setOrder(Integer order) {
-        this.order = order;
-    }
-
-    public Integer getOrder() {
-        return order;
-    }
-
-    @Override
-    public int compareTo(AtomicAction o) {
-        return order.compareTo(o.getOrder());
     }
 
 }
