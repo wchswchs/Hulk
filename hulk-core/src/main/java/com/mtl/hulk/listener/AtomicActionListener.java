@@ -38,7 +38,7 @@ public class AtomicActionListener extends HulkListener {
     public boolean process() throws Exception {
         if (action.getServiceOperation().getType() == ServiceOperationType.TCC) {
             Object object = null;
-            Object args = null;
+            Object args = bac;
             try {
                 if (applicationContext.getId().split(":")[0].equals(action.getServiceOperation().getService())) {
                     object = applicationContext.getBean(tryAction.getServiceOperation().getBeanClass());
@@ -49,9 +49,7 @@ public class AtomicActionListener extends HulkListener {
                 Method method = object.getClass().getMethod(action.getServiceOperation().getName(), BusinessActivityContext.class);
                 String[] aid = hc.getActivity().getId().formatString().split("_");
                 HulkMvccExecutor mvccExecutor = HulkMvccFactory.getExecuter(hc.getActivity().getIsolationLevel());
-                if (mvccExecutor == null) {
-                    args = bac;
-                } else {
+                if (mvccExecutor != null) {
                     long currentVersion = mvccExecutor.init(
                             "Transaction_" + aid[0] + "_" + aid[1] + "_" + action.getServiceOperation().getName(), bac);
                     args = mvccExecutor.getActionArguments(mvccExecutor.getCurrentVersion(currentVersion));
