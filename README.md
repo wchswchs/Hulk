@@ -181,11 +181,13 @@ class TransferMinusActionImpl implements TransferMinusAction {
     }
 
     @Override
+    @MTLSuspendControl(BusinessActivityExecutionType.COMMIT) //防悬挂注解
     public boolean confirm(BusinessActionContext businessActionContext){
         DAO1; //实现扣钱
     }
 
     @Override
+    @MTLSuspendControl(BusinessActivityExecutionType.ROLLBACK) //防悬挂注解
     public boolean cancel(BusinessActionContext businessActionContext){
 	DAO2; //扣钱回滚
     }
