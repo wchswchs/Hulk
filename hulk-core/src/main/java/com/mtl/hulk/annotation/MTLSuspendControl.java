@@ -1,5 +1,6 @@
 package com.mtl.hulk.annotation;
 
+import com.mtl.hulk.model.BusinessActivityExecutionType;
 import org.springframework.core.annotation.AliasFor;
 
 import java.lang.annotation.*;
@@ -11,9 +12,9 @@ import java.lang.annotation.*;
 public @interface MTLSuspendControl {
 
     @AliasFor("type")
-    String value() default "";
+    BusinessActivityExecutionType value() default BusinessActivityExecutionType.COMMIT;
 
     @AliasFor("value")
-    String type() default "";
+    BusinessActivityExecutionType type() default BusinessActivityExecutionType.COMMIT;
 
 }

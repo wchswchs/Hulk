@@ -2,6 +2,7 @@ package com.mtl.hulk.aop.interceptor;
 
 import com.mtl.hulk.HulkInterceptor;
 import com.mtl.hulk.annotation.MTLSuspendControl;
+import com.mtl.hulk.model.BusinessActivityExecutionType;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
@@ -21,10 +22,12 @@ public class SuspendControlInterceptor implements HulkInterceptor, MethodInterce
         Map<Long, Thread> threads = null;
         long requestId = INVOKE_ID.incrementAndGet();
         if (methodInvocation.getMethod().getAnnotation(MTLSuspendControl.class) != null) {
-            if (methodInvocation.getMethod().getAnnotation(MTLSuspendControl.class).value().equals("Commit")) {
+            if (methodInvocation.getMethod().getAnnotation(MTLSuspendControl.class).value() ==
+                BusinessActivityExecutionType.COMMIT) {
                 threads = commitTheads;
             }
-            if (methodInvocation.getMethod().getAnnotation(MTLSuspendControl.class).value().equals("Rollback")) {
+            if (methodInvocation.getMethod().getAnnotation(MTLSuspendControl.class).value() ==
+                BusinessActivityExecutionType.ROLLBACK) {
                 threads = rollbackTheads;
                 if (commitTheads.size() > 0) {
                     for (Thread t : commitTheads.values()) {
