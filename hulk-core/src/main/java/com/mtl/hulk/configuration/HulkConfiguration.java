@@ -3,8 +3,10 @@ package com.mtl.hulk.configuration;
 import com.mtl.hulk.HulkShutdownHook;
 import com.mtl.hulk.aop.BeanFactoryHulkAdvisor;
 import com.mtl.hulk.aop.interceptor.BrokerInterceptor;
+import com.mtl.hulk.aop.interceptor.SuspendControlInterceptor;
 import com.mtl.hulk.aop.interceptor.TransactionInterceptor;
 import com.mtl.hulk.aop.pointcut.BrokerPointcut;
+import com.mtl.hulk.aop.pointcut.SuspendControlPointcut;
 import com.mtl.hulk.aop.pointcut.TransactionPointcut;
 import com.mtl.hulk.db.HulkDataSource;
 import com.mtl.hulk.extension.NetworkCommunication;
@@ -51,6 +53,13 @@ public class HulkConfiguration {
     }
 
     @Bean
+    public BeanFactoryHulkAdvisor suspendControlAdvisor() {
+        BeanFactoryHulkAdvisor advisor = new BeanFactoryHulkAdvisor(new SuspendControlPointcut());
+        advisor.setAdvice(suspendControlInterceptor());
+        return advisor;
+    }
+
+    @Bean
     public TransactionInterceptor hulkTransactionInterceptor() {
         return new TransactionInterceptor(properties, applicationContext);
     }
@@ -58,6 +67,11 @@ public class HulkConfiguration {
     @Bean
     public BrokerInterceptor hulkBrokerInterceptor() {
         return new BrokerInterceptor(properties);
+    }
+
+    @Bean
+    public SuspendControlInterceptor suspendControlInterceptor() {
+        return new SuspendControlInterceptor();
     }
 
     @Bean

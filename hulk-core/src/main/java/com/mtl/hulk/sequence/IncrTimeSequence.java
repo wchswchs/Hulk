@@ -12,8 +12,6 @@ public class IncrTimeSequence implements HulkSequence {
 
 	protected static final Logger LOGGER = LoggerFactory.getLogger(IncrTimeSequence.class);
 
-	private static final IncrTimeSequence instance = new IncrTimeSequence(1, 1);
-
 	private final static long twepoch = 1288834974657L;
 	// 机器标识位数
 	private final static long workerIdBits = 5L;
@@ -39,8 +37,8 @@ public class IncrTimeSequence implements HulkSequence {
 	private final long workerId;
 	private final long datacenterId;
 
-	public static IncrTimeSequence getInstance() {
-		return IncrTimeSequence.instance;
+	public static IncrTimeSequence getInstance(String workerId) {
+		return new IncrTimeSequence(Long.parseLong(workerId), 1);
 	}
 
 	public IncrTimeSequence(long workerId, long datacenterId) {

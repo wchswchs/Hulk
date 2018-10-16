@@ -1,26 +1,28 @@
 package com.mtl.hulk.listener;
 
 import com.mtl.hulk.HulkListener;
-import com.mtl.hulk.HulkMvccFactory;
 import com.mtl.hulk.HulkMvccExecutor;
+import com.mtl.hulk.HulkMvccFactory;
+import com.mtl.hulk.HulkResourceManager;
 import com.mtl.hulk.context.*;
+import com.mtl.hulk.exception.ActionException;
 import com.mtl.hulk.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class AtomicActionListener extends HulkListener {
 
-    private final AtomicAction tryAction;
-    private final BusinessActivityContext bac;
-    private final RuntimeContext hc;
-    private Map<String, Boolean> snapshot = new HashMap<String, Boolean>();
+    private volatile AtomicAction tryAction;
+    private volatile BusinessActivityContext bac;
+    private volatile RuntimeContext hc;
     private final Logger logger = LoggerFactory.getLogger(AtomicActionListener.class);
 
-    public AtomicActionListener(AtomicAction action, ApplicationContext applicationContext, AtomicAction tryAction, BusinessActivityContext bac, RuntimeContext hc) {
+    public AtomicActionListener(AtomicAction action, ApplicationContext applicationContext, AtomicAction tryAction,
+                                BusinessActivityContext bac, RuntimeContext hc) {
         super(action, applicationContext);
         this.tryAction = tryAction;
         this.bac = bac;
@@ -35,26 +37,34 @@ public class AtomicActionListener extends HulkListener {
     @Override
     public boolean process() throws Exception {
         if (action.getServiceOperation().getType() == ServiceOperationType.TCC) {
-            HulkMvccExecutor executor = HulkMvccFactory.getExecuter(hc.getActivity().getIsolationLevel());
-            return executor.run(this);
+            Object object = null;
+            Object args = bac;
+            try {
+                if (applicationContext.getId().split(":")[0].equals(action.getServiceOperation().getService())) {
+                    object = applicationContext.getBean(tryAction.getServiceOperation().getBeanClass());
+                } else {
+                    object = HulkResourceManager.getClients().get(action.getServiceOperation().getService());
+                }
+                logger.info("Transaction Executor running: {}", action.getServiceOperation().getName());
+                Method method = object.getClass().getMethod(action.getServiceOperation().getName(), BusinessActivityContext.class);
+                String[] aid = hc.getActivity().getId().formatString().split("_");
+                HulkMvccExecutor mvccExecutor = HulkMvccFactory.getExecuter(hc.getActivity().getIsolationLevel());
+                if (mvccExecutor != null) {
+                    long currentVersion = mvccExecutor.init(
+                            "Transaction_" + aid[0] + "_" + aid[1] + "_" + action.getServiceOperation().getName(), bac);
+                    args = mvccExecutor.getActionArguments(mvccExecutor.getCurrentVersion(currentVersion));
+                }
+                Object ret = method.invoke(object, args);
+                if (((boolean) ret) == false) {
+                    return false;
+                }
+            } catch (InvocationTargetException ex) {
+                throw new ActionException(action.getServiceOperation().getName(), ex);
+            } catch (Exception ex) {
+                throw new ActionException(action.getServiceOperation().getName(), ex);
+            }
         }
-        return false;
-    }
-
-    public Map<String, Boolean> getSnapshot() {
-        return snapshot;
-    }
-
-    public AtomicAction getTryAction() {
-        return tryAction;
-    }
-
-    public BusinessActivityContext getBac() {
-        return bac;
-    }
-
-    public RuntimeContext getHc() {
-        return hc;
+        return true;
     }
 
     @Override

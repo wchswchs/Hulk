@@ -2,6 +2,7 @@ package com.mtl.hulk.listener;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.HulkListener;
+import com.mtl.hulk.HulkMvccExecutor;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
 import com.mtl.hulk.model.AtomicAction;
@@ -14,13 +15,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class BusinessActivityListener extends HulkListener {
 
     private final Logger logger = LoggerFactory.getLogger(BusinessActivityListener.class);
 
-    private static final List<Future> runFutures = new CopyOnWriteArrayList<Future>();
+    private static final Map<String, CopyOnWriteArrayList<Future>> runFutures = new ConcurrentHashMap<String, CopyOnWriteArrayList<Future>>();
+    private AtomicReference<HulkMvccExecutor> executor = new AtomicReference<HulkMvccExecutor>();
     private final ExecutorService runExecutor = new ThreadPoolExecutor(properties.getActionthreadPoolSize(),
                                                 Integer.MAX_VALUE, 10L,
                                                 TimeUnit.SECONDS, new SynchronousQueue<>(),
@@ -39,6 +43,9 @@ public class BusinessActivityListener extends HulkListener {
     public boolean process() throws Exception {
         List<AtomicAction> currentActions = new CopyOnWriteArrayList<AtomicAction>();
         RuntimeContext context = RuntimeContextHolder.getContext();
+        if (runFutures.get(context.getActivity().getId().getSequence()) == null) {
+            runFutures.put(context.getActivity().getId().getSequence(), new CopyOnWriteArrayList<Future>());
+        }
         if (context.getActivity().getStatus() == BusinessActivityStatus.COMMITTING) {
             currentActions = context.getActivity().getAtomicCommitActions();
         }
@@ -50,77 +57,78 @@ public class BusinessActivityListener extends HulkListener {
                 AtomicActionListener listener = new AtomicActionListener(currentActions.get(i), applicationContext,
                         context.getActivity().getAtomicTryActions().get(i), BusinessActivityContextHolder.getContext(),
                         context);
-                String actionKey = "Transaction_" + context.getActivity().getId().getSequence()
-                        + "_" + currentActions.get(i).getServiceOperation().getName();
-                listener.getSnapshot().put(actionKey, false);
                 listener.setProperties(properties);
                 listener.setApplicationContext(applicationContext);
                 Future<Boolean> runFuture = runExecutor.submit(new Callable<Boolean>() {
-                        /**
-                         * 异步执行事务方法
-                         * @return
-                         * @throws Exception
-                         */
-                        @Override
-                        public Boolean call() throws Exception {
-                            try {
-                                return listener.process();
-                            } catch (Exception e) {
-                                throw e;
-                            }
+                    /**
+                     * 异步执行事务方法
+                     * @return
+                     * @throws Exception
+                     */
+                    @Override
+                    public Boolean call() throws Exception {
+                        try {
+                            return listener.process();
+                        } catch (Exception e) {
+                            throw e;
                         }
+                    }
                 });
-                runFutures.add(runFuture);
+                runFutures.get(context.getActivity().getId().getSequence()).add(runFuture);
             }
-            for (Future rf : runFutures) {
+            for (Future rf : runFutures.get(context.getActivity().getId().getSequence())) {
                 Object runResponse = rf.get();
                 if (runResponse == null) {
                     return false;
                 }
             }
         } finally {
-            runFutures.clear();
+            runFutures.get(context.getActivity().getId().getSequence()).clear();
+            getExecutor().clear();
         }
         return true;
     }
 
-    public static List<Future> getRunFutures() {
-        return runFutures;
+    public HulkMvccExecutor getExecutor() {
+        return executor.get();
     }
 
-    public ExecutorService getRunExecutor() {
-        return runExecutor;
+    public void setExecutor(HulkMvccExecutor executor) {
+        this.executor.set(executor);
     }
 
     @Override
     public void destroy() {
+        String transactionId = RuntimeContextHolder.getContext().getActivity().getId().getSequence();
         if (runFutures.size() > 0) {
-            for (Future runFuture : runFutures) {
+            for (Future runFuture : runFutures.get(transactionId)) {
                 FutureUtil.gracefulCancel(runFuture);
             }
-            runFutures.clear();
+            runFutures.get(transactionId).clear();
         }
         runExecutor.shutdown();
     }
 
     @Override
     public void destroyNow() {
+        String transactionId = RuntimeContextHolder.getContext().getActivity().getId().getSequence();
         if (runFutures.size() > 0) {
-            for (Future runFuture : runFutures) {
+            for (Future runFuture : runFutures.get(transactionId)) {
                 FutureUtil.cancelNow(runFuture);
             }
-            runFutures.clear();
+            runFutures.get(transactionId).clear();
         }
         runExecutor.shutdownNow();
     }
 
     @Override
     public void closeFuture() {
+        String transactionId = RuntimeContextHolder.getContext().getActivity().getId().getSequence();
         if (runFutures.size() > 0) {
-            for (Future runFuture : runFutures) {
+            for (Future runFuture : runFutures.get(transactionId)) {
                 FutureUtil.cancelNow(runFuture);
             }
-            runFutures.clear();
+            runFutures.get(transactionId).clear();
         }
     }
 

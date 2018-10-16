@@ -9,6 +9,7 @@ import com.mtl.hulk.aop.HulkAspectSupport;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.*;
 import com.mtl.hulk.executor.BusinessActivityExecutor;
+import com.mtl.hulk.executor.BusinessActivityTimeoutExecutor;
 import com.mtl.hulk.logger.BusinessActivityLoggerThread;
 import com.mtl.hulk.message.HulkErrorCode;
 import com.mtl.hulk.model.*;
@@ -66,21 +67,9 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRIED);
                 future = transactionExecutor.submit(new BusinessActivityExecutor(new HulkContext(BusinessActivityContextHolder.getContext(),
                         RuntimeContextHolder.getContext())));
-                timeoutScheduledExecutorService.schedule(new Runnable() {
-                    /**
-                     * 事务执行超时监控
-                     */
-                    @Override
-                    public void run() {
-                        if (!future.isDone()) {
-                            logger.error("Transaction Execute Timeout!");
-                            HulkResourceManager.getBam().getListener().closeFuture();
-                            for (HulkInterceptor interceptor : HulkResourceManager.getInterceptors()) {
-                               interceptor.closeFuture();
-                            }
-                        }
-                    }
-                }, RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
+                timeoutScheduledExecutorService.schedule(new BusinessActivityTimeoutExecutor(future, context),
+                        RuntimeContextHolder.getContext().getActivity().getTimeout(),
+                        TimeUnit.SECONDS);
                 status = future.get();
             } else {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRYING_EXPT);
@@ -112,18 +101,9 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
         } catch (Exception ex) {
             throw ex;
         }
-        timeoutScheduledExecutorService.schedule(new Runnable() {
-            @Override
-            public void run() {
-                if (!future.isDone()) {
-                    logger.error("Transaction Execute Timeout!");
-                    HulkResourceManager.getBam().getListener().closeFuture();
-                    for (HulkInterceptor interceptor : HulkResourceManager.getInterceptors()) {
-                        interceptor.closeFuture();
-                    }
-                }
-            }
-        }, RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
+        timeoutScheduledExecutorService.schedule(new BusinessActivityTimeoutExecutor(future,
+                RuntimeContextHolder.getContext()), RuntimeContextHolder.getContext().getActivity().getTimeout(),
+                TimeUnit.SECONDS);
         return HulkResponseFactory.getResponse(status);
     }
 

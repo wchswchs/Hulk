@@ -13,13 +13,18 @@
 6. 事务ID生成策略可配置
 7. 支持分支事务(事务嵌套)
 8. 业务代码无侵入
-9. 支持MVCC，RU和RC隔离级别，默认RU
+9. 防悬挂
+10. 支持MVCC，RU和RC隔离级别，默认RC
 
 ## 使用指南
 
 ### Getting Started
 
 使用代码中请求serviceA，将调用serviceB和serviceC
+
+1. 添加配置文件：/opt/hulk/hulk_global.properties，内容如下：
+   eureka.serviceUrl.defaultZone=http://localhost:8761/eureka/
+2. 添加配置：/opt/hulk/hulk.properties，内容详见下面的配置说明
 
 ### 通讯方式自定义
 
@@ -176,11 +181,13 @@ class TransferMinusActionImpl implements TransferMinusAction {
     }
 
     @Override
+    @MTLSuspendControl(BusinessActivityExecutionType.COMMIT) //防悬挂注解
     public boolean confirm(BusinessActionContext businessActionContext){
         DAO1; //实现扣钱
     }
 
     @Override
+    @MTLSuspendControl(BusinessActivityExecutionType.ROLLBACK) //防悬挂注解
     public boolean cancel(BusinessActionContext businessActionContext){
 	DAO2; //扣钱回滚
     }
@@ -324,6 +331,7 @@ public interface TransferAddActionClient {
 }
 ```
 ## 未来规划
-* 实现MVCC
+* 实现MVCC之RR，Serializable隔离级别
 * 分布式事务日志恢复
 * 事务执行监控
+* SPI
