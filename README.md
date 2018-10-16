@@ -328,6 +328,6 @@ public interface TransferAddActionClient {
 }
 ```
 ## 未来规划
-* 实现MVCC
+* 实现MVCC之RR，Serializable隔离级别
 * 分布式事务日志恢复
 * 事务执行监控
