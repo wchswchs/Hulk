@@ -18,6 +18,6 @@ public @interface MTLDTActivity {
 
     long timeout() default 5;
 
-    BusinessActivityIsolationLevel isolationLevel() default BusinessActivityIsolationLevel.READ_UNCOMMITTED;
+    BusinessActivityIsolationLevel isolationLevel() default BusinessActivityIsolationLevel.READ_COMMITED;
 
 }
