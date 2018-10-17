@@ -24,15 +24,17 @@ import org.springframework.context.ApplicationContext;
 
 import java.io.Serializable;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class TransactionInterceptor extends HulkAspectSupport implements HulkInterceptor, MethodInterceptor, Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(TransactionInterceptor.class);
 
+    private final Lock lock = new ReentrantLock();
     private final ExecutorService transactionExecutor = Executors.newFixedThreadPool(properties.getTransactionThreadPoolSize());
     private final ScheduledExecutorService timeoutScheduledExecutorService = Executors.newScheduledThreadPool(properties.getTransactionThreadPoolSize(),
             (new ThreadFactoryBuilder()).setNameFormat("Run-Timeout-Thread-%d").build());
-    private Future<Boolean> future;
 
     public TransactionInterceptor(HulkProperties properties, ApplicationContext apc) {
         super(properties, apc);
@@ -53,6 +55,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
         RuntimeContext context = RuntimeContextHolder.getContext();
 
         HulkResponse response = null;
+        Future<Boolean> future = null;
         ExecutorService loggerExecutor = HulkResourceManager.getBam().getLogExecutor();
         try {
             if (context.getActivity().getId() == null) {
@@ -67,14 +70,15 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRIED);
                 future = transactionExecutor.submit(new BusinessActivityExecutor(new HulkContext(BusinessActivityContextHolder.getContext(),
                         RuntimeContextHolder.getContext())));
+                lock.lock();
                 timeoutScheduledExecutorService.schedule(new BusinessActivityTimeoutExecutor(future, context),
                         RuntimeContextHolder.getContext().getActivity().getTimeout(),
                         TimeUnit.SECONDS);
                 status = future.get();
+                lock.unlock();
             } else {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRYING_EXPT);
             }
-
             loggerExecutor.submit(new BusinessActivityLoggerThread(properties,
                                     new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext())));
             response = HulkResponseFactory.getResponse(status);
@@ -87,6 +91,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
         } finally {
             BusinessActivityContextHolder.clearContext();
             RuntimeContextHolder.clearContext();
+            FutureUtil.gracefulCancel(future);
         }
         return JSONObject.toJSONString(response);
     }
@@ -94,16 +99,19 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
     private HulkResponse processException() throws Exception {
         boolean status = false;
 
-        future = transactionExecutor.submit(new BusinessActivityExecutor(new HulkContext(BusinessActivityContextHolder.getContext(),
+        Future<Boolean> future = transactionExecutor.submit(new BusinessActivityExecutor(new HulkContext(BusinessActivityContextHolder.getContext(),
                 RuntimeContextHolder.getContext())));
         try {
+            lock.lock();
+            timeoutScheduledExecutorService.schedule(new BusinessActivityTimeoutExecutor(future,
+                            RuntimeContextHolder.getContext()), RuntimeContextHolder.getContext().getActivity().getTimeout(),
+                    TimeUnit.SECONDS);
             status = future.get();
+            lock.unlock();
         } catch (Exception ex) {
             throw ex;
         }
-        timeoutScheduledExecutorService.schedule(new BusinessActivityTimeoutExecutor(future,
-                RuntimeContextHolder.getContext()), RuntimeContextHolder.getContext().getActivity().getTimeout(),
-                TimeUnit.SECONDS);
+
         return HulkResponseFactory.getResponse(status);
     }
 
@@ -169,19 +177,16 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
 
     @Override
     public void destroy() {
-        FutureUtil.gracefulCancel(future);
         ExecutorUtil.gracefulShutdown(transactionExecutor);
     }
 
     @Override
     public void destroyNow() {
-        FutureUtil.cancelNow(future);
         ExecutorUtil.shutdownNow(transactionExecutor);
     }
 
     @Override
     public void closeFuture() {
-        FutureUtil.cancelNow(future);
     }
 
 }
