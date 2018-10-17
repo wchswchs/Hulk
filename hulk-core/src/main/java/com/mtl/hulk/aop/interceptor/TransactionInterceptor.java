@@ -9,7 +9,6 @@ import com.mtl.hulk.aop.HulkAspectSupport;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.*;
 import com.mtl.hulk.executor.BusinessActivityExecutor;
-import com.mtl.hulk.executor.BusinessActivityTimeoutExecutor;
 import com.mtl.hulk.logger.BusinessActivityLoggerThread;
 import com.mtl.hulk.message.HulkErrorCode;
 import com.mtl.hulk.model.*;
@@ -24,14 +23,11 @@ import org.springframework.context.ApplicationContext;
 
 import java.io.Serializable;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class TransactionInterceptor extends HulkAspectSupport implements HulkInterceptor, MethodInterceptor, Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(TransactionInterceptor.class);
 
-    private final Lock lock = new ReentrantLock();
     private final ExecutorService transactionExecutor = Executors.newFixedThreadPool(properties.getTransactionThreadPoolSize());
     private final ScheduledExecutorService timeoutScheduledExecutorService = Executors.newScheduledThreadPool(properties.getTransactionThreadPoolSize(),
             (new ThreadFactoryBuilder()).setNameFormat("Run-Timeout-Thread-%d").build());
@@ -70,12 +66,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRIED);
                 future = transactionExecutor.submit(new BusinessActivityExecutor(new HulkContext(BusinessActivityContextHolder.getContext(),
                         RuntimeContextHolder.getContext())));
-                lock.lock();
-                timeoutScheduledExecutorService.schedule(new BusinessActivityTimeoutExecutor(future, context),
-                        RuntimeContextHolder.getContext().getActivity().getTimeout(),
-                        TimeUnit.SECONDS);
-                status = future.get();
-                lock.unlock();
+                status = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
             } else {
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRYING_EXPT);
             }
@@ -84,9 +75,16 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
             response = HulkResponseFactory.getResponse(status);
         } catch (Exception ex) {
             logger.error("Transaction Execute Error", ex);
-            RuntimeContextHolder.getContext().setException(new HulkException(
-                    HulkErrorCode.RUN_EXCEPTION.getCode(),
-                    HulkErrorCode.RUN_EXCEPTION.getMessage()));
+            HulkErrorCode code = HulkErrorCode.RUN_EXCEPTION;
+            if (ex instanceof TimeoutException) {
+                code = HulkErrorCode.COMMIT_TIMEOUT;
+            }
+            RuntimeContextHolder.getContext().setException(new HulkException(code.getCode(), code.getMessage()));
+            HulkResourceManager.getBam().getListener().closeFuture();
+            for (HulkInterceptor interceptor : HulkResourceManager.getInterceptors()) {
+                interceptor.closeFuture();
+            }
+            FutureUtil.cancelNow(future);
             response = processException();
         } finally {
             BusinessActivityContextHolder.clearContext();
@@ -102,12 +100,7 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
         Future<Boolean> future = transactionExecutor.submit(new BusinessActivityExecutor(new HulkContext(BusinessActivityContextHolder.getContext(),
                 RuntimeContextHolder.getContext())));
         try {
-            lock.lock();
-            timeoutScheduledExecutorService.schedule(new BusinessActivityTimeoutExecutor(future,
-                            RuntimeContextHolder.getContext()), RuntimeContextHolder.getContext().getActivity().getTimeout(),
-                    TimeUnit.SECONDS);
-            status = future.get();
-            lock.unlock();
+            status = future.get(RuntimeContextHolder.getContext().getActivity().getTimeout(), TimeUnit.SECONDS);
         } catch (Exception ex) {
             throw ex;
         }
