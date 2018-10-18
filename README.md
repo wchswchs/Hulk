@@ -87,6 +87,8 @@ public NetworkCommunication communication() {
 
 * mtl.snapShotLogDir：该属性指定事务日志快照路径，默认：/data/hulk
 
+* mtl.logScanPeriod：该属性设置事务日志快照扫描周期，默认：20s
+
 * mtl.hulk.logMasters：该属性指定事务日志存储master，例如：mysql定义如下：
 
 ```java
