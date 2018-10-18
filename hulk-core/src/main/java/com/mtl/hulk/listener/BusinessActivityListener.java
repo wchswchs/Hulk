@@ -26,7 +26,7 @@ public class BusinessActivityListener extends HulkListener {
     private static final Map<String, CopyOnWriteArrayList<Future>> runFutures = new ConcurrentHashMap<String, CopyOnWriteArrayList<Future>>();
     private AtomicReference<HulkMvccExecutor> executor = new AtomicReference<HulkMvccExecutor>();
     private final ExecutorService runExecutor = new ThreadPoolExecutor(properties.getActionthreadPoolSize(),
-                                                Integer.MAX_VALUE, 10L,
+                                                properties.getActionMaxThreadPoolSize(), 10L,
                                                 TimeUnit.SECONDS, new SynchronousQueue<>(),
                                                 (new ThreadFactoryBuilder()).setNameFormat("Run-Thread-%d").build());
 

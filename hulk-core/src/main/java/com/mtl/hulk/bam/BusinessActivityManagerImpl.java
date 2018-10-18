@@ -28,7 +28,7 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
 
     private final BusinessActivityListener listener;
     private final ExecutorService logExecutor = new ThreadPoolExecutor(properties.getLogThreadPoolSize(),
-                                        Integer.MAX_VALUE, 5L,
+                                        properties.getLogMaxThreadPoolSize(), 5L,
                                         TimeUnit.SECONDS, new SynchronousQueue<>(),
                                         (new ThreadFactoryBuilder()).setNameFormat("Hulk-Log-Thread-%d").build());
 

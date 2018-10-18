@@ -39,7 +39,9 @@ public class SuspendControlInterceptor implements HulkInterceptor, MethodInterce
             if (commitTheads.get(methodKey.get()) == null) {
                 commitTheads.put(methodKey.get(), new CopyOnWriteArrayList<Thread>());
             }
-            commitTheads.get(methodKey.get()).add(currentThread);
+            if (commitTheads.get(methodKey.get()) != null) {
+                commitTheads.get(methodKey.get()).add(currentThread);
+            }
         }
         if (methodInvocation.getMethod().getAnnotation(MTLSuspendControl.class).value() ==
             BusinessActivityExecutionType.ROLLBACK) {
@@ -55,7 +57,9 @@ public class SuspendControlInterceptor implements HulkInterceptor, MethodInterce
         Object ret = methodInvocation.proceed();
         if (ret != null && methodInvocation.getMethod().getAnnotation(MTLSuspendControl.class).value() ==
                 BusinessActivityExecutionType.COMMIT) {
-            commitTheads.get(methodKey.get()).remove(currentThread);
+            if (commitTheads.get(methodKey.get()) != null) {
+                commitTheads.get(methodKey.get()).remove(currentThread);
+            }
         }
         return (boolean) ret;
     }

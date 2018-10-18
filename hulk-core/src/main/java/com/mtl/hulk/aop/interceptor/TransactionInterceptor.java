@@ -71,13 +71,16 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
                 RuntimeContextHolder.getContext().getActivity().setStatus(BusinessActivityStatus.TRYING_EXPT);
             }
             loggerExecutor.submit(new BusinessActivityLoggerThread(properties,
-                                    new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext())));
+                    new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext())));
             response = HulkResponseFactory.getResponse(status);
         } catch (Exception ex) {
             logger.error("Transaction Execute Error", ex);
             HulkErrorCode code = HulkErrorCode.RUN_EXCEPTION;
             if (ex instanceof TimeoutException) {
                 code = HulkErrorCode.COMMIT_TIMEOUT;
+            }
+            if (ex instanceof RejectedExecutionException) {
+                code = HulkErrorCode.REJECT_EXCEPTION;
             }
             RuntimeContextHolder.getContext().setException(new HulkException(code.getCode(), code.getMessage()));
             HulkResourceManager.getBam().getListener().closeFuture();

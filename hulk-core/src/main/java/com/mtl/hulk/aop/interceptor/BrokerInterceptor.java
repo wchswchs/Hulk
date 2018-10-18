@@ -23,7 +23,7 @@ public class BrokerInterceptor extends HulkAspectSupport implements HulkIntercep
     private static final Logger logger = LoggerFactory.getLogger(BrokerInterceptor.class);
 
     private final ExecutorService tryExecutor = new ThreadPoolExecutor(properties.getTrythreadPoolSize(),
-                            Integer.MAX_VALUE, 10L,
+                            properties.getTryMaxThreadPoolSize(), 10L,
                             TimeUnit.SECONDS, new SynchronousQueue<>(),
                                     (new ThreadFactoryBuilder()).setNameFormat("Try-Thread-%d").build());
     private static final List<Future> tryFutures = new CopyOnWriteArrayList<Future>();

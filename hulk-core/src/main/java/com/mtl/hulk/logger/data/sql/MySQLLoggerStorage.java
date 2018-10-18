@@ -40,10 +40,11 @@ public class MySQLLoggerStorage extends BusinessActivityLogger {
             return false;
         }
 
-        String sql = "INSERT INTO tm_business_activity_log(businessActivityId,businessActivityStatus,startTime,runtimeContext,businessActivityContext) " +
+        String sql1 = "INSERT INTO tm_business_activity_log(businessActivityId,businessActivityStatus,startTime,runtimeContext,businessActivityContext) " +
                 "VALUES (?, ?, ?,?,?)";
-        PreparedStatement ptmt = dataSource.prepareStatement(sql);
+        PreparedStatement ptmt = null;
         try {
+            ptmt = dataSource.prepareStatement(sql1);
             ptmt.setString(1, getBusinessActivityIdStr(context.getActivity().getId()));
             ptmt.setInt(2, context.getActivity().getStatus().getCode());
             ptmt.setDate(3, new Date(context.getActivity().getStartTime().getTime()));
