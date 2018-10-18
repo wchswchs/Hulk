@@ -43,7 +43,8 @@ public class SQLDataSource extends HulkDataSource {
             } else {
                 sqlType = SqlType.SELECT;
             }
-        } else if (StringUtil.startsWithIgnoreCaseAndWs(noCommentsSql, "insert")) {
+        } else if (StringUtil.startsWithIgnoreCaseAndWs(noCommentsSql, "insert")
+                    || StringUtil.startsWithIgnoreCaseAndWs(noCommentsSql, "replace")) {
             sqlType = SqlType.INSERT;
         } else if (StringUtil.startsWithIgnoreCaseAndWs(noCommentsSql, "update")) {
             sqlType = SqlType.UPDATE;

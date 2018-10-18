@@ -8,6 +8,13 @@ public class RuntimeContext {
     private BusinessActivity activity = new BusinessActivity();
     private HulkException exception;
 
+    public RuntimeContext() {}
+
+    public RuntimeContext(BusinessActivity activity, HulkException exception) {
+        this.activity = activity;
+        this.exception = exception;
+    }
+
     public void setActivity(BusinessActivity activity) {
         this.activity = activity;
     }

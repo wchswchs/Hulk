@@ -1,7 +1,6 @@
 package com.mtl.hulk.aop.interceptor;
 
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.*;
 import com.mtl.hulk.annotation.MTLDTActivity;
 import com.mtl.hulk.annotation.MTLTwoPhaseAction;
@@ -29,8 +28,6 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
     private static final Logger logger = LoggerFactory.getLogger(TransactionInterceptor.class);
 
     private final ExecutorService transactionExecutor = Executors.newFixedThreadPool(properties.getTransactionThreadPoolSize());
-    private final ScheduledExecutorService timeoutScheduledExecutorService = Executors.newScheduledThreadPool(properties.getTransactionThreadPoolSize(),
-            (new ThreadFactoryBuilder()).setNameFormat("Run-Timeout-Thread-%d").build());
 
     public TransactionInterceptor(HulkProperties properties, ApplicationContext apc) {
         super(properties, apc);
@@ -107,6 +104,10 @@ public class TransactionInterceptor extends HulkAspectSupport implements HulkInt
         } catch (Exception ex) {
             throw ex;
         }
+
+        ExecutorService loggerExecutor = HulkResourceManager.getBam().getLogExecutor();
+        loggerExecutor.submit(new BusinessActivityLoggerThread(properties,
+                new HulkContext(BusinessActivityContextHolder.getContext(), RuntimeContextHolder.getContext())));
 
         return HulkResponseFactory.getResponse(status);
     }

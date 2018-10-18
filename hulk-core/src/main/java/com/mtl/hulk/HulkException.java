@@ -5,6 +5,8 @@ public class HulkException {
     private int code;
     private String message;
 
+    public HulkException() {}
+
     public HulkException(int code, String message) {
         this.code = code;
         this.message = message;

@@ -40,7 +40,7 @@ public class MySQLLoggerStorage extends BusinessActivityLogger {
             return false;
         }
 
-        String sql1 = "INSERT INTO tm_business_activity_log(businessActivityId,businessActivityStatus,startTime,runtimeContext,businessActivityContext) " +
+        String sql1 = "REPLACE INTO tm_business_activity_log(businessActivityId,businessActivityStatus,startTime,runtimeContext,businessActivityContext) " +
                 "VALUES (?, ?, ?,?,?)";
         PreparedStatement ptmt = null;
         try {
@@ -124,7 +124,7 @@ public class MySQLLoggerStorage extends BusinessActivityLogger {
             return false;
         }
 
-        String sql = "INSERT INTO tm_business_activity_exception_log(businessActivityId,exceptionContent) " +
+        String sql = "REPLACE INTO tm_business_activity_exception_log(businessActivityId,exceptionContent) " +
                 "VALUES (?, ?)";
         try (PreparedStatement ptmt = dataSource.prepareStatement(sql)) {
             ptmt.setString(1, getBusinessActivityIdStr(ex.getId()));
