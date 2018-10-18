@@ -23,7 +23,7 @@ public class HulkProperties {
     private Class<?> logSerialize = KryoSerializer.class;
     private String transIdSequence = "timestamp";
     private int retryTranactionCount = 3;
-    private String snapShotLogDir = "/data/transaction";
+    private String snapShotLogDir = "/data/hulk";
     private int logScanPeriod = 20;
 
     public void setRetryTranactionCount(int retryTranactionCount) {
