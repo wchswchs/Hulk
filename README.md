@@ -85,6 +85,8 @@ public NetworkCommunication communication() {
 
 * mtl.hulk.loggerStorage：该属性指定事务日志存储介质，默认：mysql
 
+* mtl.snapShotLogDir：该属性指定事务日志快照路径，默认：/data/hulk
+
 * mtl.hulk.logMasters：该属性指定事务日志存储master，例如：mysql定义如下：
 
 ```java
