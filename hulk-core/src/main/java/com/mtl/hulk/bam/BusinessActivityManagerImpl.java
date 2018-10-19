@@ -9,6 +9,7 @@ import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.exception.ActionException;
 import com.mtl.hulk.listener.BusinessActivityListener;
 import com.mtl.hulk.configuration.HulkProperties;
+import com.mtl.hulk.logger.BusinessActivityLogScanner;
 import com.mtl.hulk.message.HulkErrorCode;
 import com.mtl.hulk.model.BusinessActivityStatus;
 import com.mtl.hulk.context.RuntimeContextHolder;
@@ -28,13 +29,17 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
 
     private final BusinessActivityListener listener;
     private final ExecutorService logExecutor = new ThreadPoolExecutor(properties.getLogThreadPoolSize(),
-                                        Integer.MAX_VALUE, 5L,
+                                        properties.getLogMaxThreadPoolSize(), 5L,
                                         TimeUnit.SECONDS, new SynchronousQueue<>(),
                                         (new ThreadFactoryBuilder()).setNameFormat("Hulk-Log-Thread-%d").build());
+    private final ScheduledExecutorService logScanner = Executors.newScheduledThreadPool(1,
+                                            (new ThreadFactoryBuilder()).setNameFormat("Log-Scanner-%d").build());
 
     public BusinessActivityManagerImpl(HulkProperties properties, ApplicationContext applicationContext) {
         super(properties, applicationContext);
         this.listener = new BusinessActivityListener(properties, applicationContext);
+        logScanner.scheduleWithFixedDelay(new BusinessActivityLogScanner(properties), properties.getLogScanPeriod(),
+                properties.getLogScanPeriod(), TimeUnit.SECONDS);
     }
 
     /**
@@ -132,12 +137,14 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
     @Override
     public void destroy() {
         listener.destroy();
+        ExecutorUtil.gracefulShutdown(logScanner);
         ExecutorUtil.gracefulShutdown(logExecutor);
     }
 
     @Override
     public void destroyNow() {
         listener.destroyNow();
+        ExecutorUtil.shutdownNow(logScanner);
         ExecutorUtil.shutdownNow(logExecutor);
     }
 

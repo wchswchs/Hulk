@@ -8,11 +8,15 @@ import com.mtl.hulk.aop.interceptor.TransactionInterceptor;
 import com.mtl.hulk.aop.pointcut.BrokerPointcut;
 import com.mtl.hulk.aop.pointcut.SuspendControlPointcut;
 import com.mtl.hulk.aop.pointcut.TransactionPointcut;
+import com.mtl.hulk.common.Constants;
+import com.mtl.hulk.context.RuntimeContextHolder;
 import com.mtl.hulk.db.HulkDataSource;
 import com.mtl.hulk.extension.NetworkCommunication;
 import com.mtl.hulk.bam.BusinessActivityManagerImpl;
 import com.mtl.hulk.db.SQLDataSource;
 import com.mtl.hulk.traffic.FeignClientCommunication;
+import feign.RequestInterceptor;
+import feign.RequestTemplate;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -106,6 +110,19 @@ public class HulkConfiguration {
     @Bean
     public HulkApplicationListener hulkApplicationListener() {
         return new HulkApplicationListener();
+    }
+
+    @Bean
+    public RequestInterceptor transactionIdHeaderRequestInterceptor() {
+        return new RequestInterceptor(){
+            @Override
+            public void apply(RequestTemplate template) {
+                if (RuntimeContextHolder.getContext().getActivity().getId() != null) {
+                    template.header(Constants.TRANSACTION_ID_HEADER_NAME,
+                            RuntimeContextHolder.getContext().getActivity().getId().getSequence());
+                }
+            }
+        };
     }
 
     private static class HulkApplicationListener implements ApplicationListener<ApplicationEvent> {

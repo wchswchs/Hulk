@@ -36,6 +36,7 @@ public class AtomicActionListener extends HulkListener {
      */
     @Override
     public boolean process() throws Exception {
+        RuntimeContextHolder.setContext(hc);
         if (action.getServiceOperation().getType() == ServiceOperationType.TCC) {
             Object object = null;
             Object args = bac;

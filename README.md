@@ -15,6 +15,7 @@
 8. 业务代码无侵入
 9. 防悬挂
 10. 支持MVCC，RU和RC隔离级别，默认RC
+11. 支持AOF机制持久化事务日志
 
 ## 使用指南
 
@@ -83,6 +84,10 @@ public NetworkCommunication communication() {
 配置属性说明：
 
 * mtl.hulk.loggerStorage：该属性指定事务日志存储介质，默认：mysql
+
+* mtl.snapShotLogDir：该属性指定事务日志快照路径，默认：/data/hulk
+
+* mtl.logScanPeriod：该属性设置事务日志快照扫描周期，默认：20s
 
 * mtl.hulk.logMasters：该属性指定事务日志存储master，例如：mysql定义如下：
 

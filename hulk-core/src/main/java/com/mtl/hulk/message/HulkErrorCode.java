@@ -7,7 +7,8 @@ public enum HulkErrorCode {
     TRY_FAIL(102, "Try失败, txId:{0}, action:{1}"),
     COMMIT_TIMEOUT(103, "Commit超时"),
     INTERRUPTED(104, "中断"),
-    RUN_EXCEPTION(105, "事务执行异常");
+    RUN_EXCEPTION(105, "事务执行异常"),
+    REJECT_EXCEPTION(106, "事务执行超载");
 
     private final int code;
 

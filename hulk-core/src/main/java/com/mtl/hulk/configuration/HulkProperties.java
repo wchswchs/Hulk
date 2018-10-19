@@ -14,12 +14,17 @@ public class HulkProperties {
     private List<PoolProperties> logSlaves;
     private int recoverySize = 20;
     private int logThreadPoolSize = 100;
-    private int transactionThreadPoolSize = 200;
+    private int logMaxThreadPoolSize = Integer.MAX_VALUE;
+    private int transactionThreadPoolSize = 600;
     private int tryThreadPoolSize = 200;
+    private int tryMaxThreadPoolSize = 800;
     private int actionThreadPoolSize = 200;
+    private int actionMaxThreadPoolSize = Integer.MAX_VALUE;
     private Class<?> logSerialize = KryoSerializer.class;
     private String transIdSequence = "timestamp";
     private int retryTranactionCount = 3;
+    private String snapShotLogDir = "/data/hulk";
+    private int logScanPeriod = 20;
 
     public void setRetryTranactionCount(int retryTranactionCount) {
         this.retryTranactionCount = retryTranactionCount;
@@ -107,6 +112,46 @@ public class HulkProperties {
 
     public int getActionthreadPoolSize() {
         return actionThreadPoolSize;
+    }
+
+    public void setActionMaxThreadPoolSize(int actionMaxThreadPoolSize) {
+        this.actionMaxThreadPoolSize = actionMaxThreadPoolSize;
+    }
+
+    public int getActionMaxThreadPoolSize() {
+        return actionMaxThreadPoolSize;
+    }
+
+    public void setLogMaxThreadPoolSize(int logMaxThreadPoolSize) {
+        this.logMaxThreadPoolSize = logMaxThreadPoolSize;
+    }
+
+    public int getLogMaxThreadPoolSize() {
+        return logMaxThreadPoolSize;
+    }
+
+    public void setTryMaxThreadPoolSize(int tryMaxThreadPoolSize) {
+        this.tryMaxThreadPoolSize = tryMaxThreadPoolSize;
+    }
+
+    public int getTryMaxThreadPoolSize() {
+        return tryMaxThreadPoolSize;
+    }
+
+    public void setSnapShotLogDir(String snapShotLogDir) {
+        this.snapShotLogDir = snapShotLogDir;
+    }
+
+    public String getSnapShotLogDir() {
+        return snapShotLogDir;
+    }
+
+    public int getLogScanPeriod() {
+        return logScanPeriod;
+    }
+
+    public void setLogScanPeriod(int logScanPeriod) {
+        this.logScanPeriod = logScanPeriod;
     }
 
 }

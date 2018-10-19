@@ -1,17 +1,18 @@
 package com.mtl.hulk.mvcc;
 
 import com.mtl.hulk.HulkMvccExecutor;
-import com.mtl.hulk.model.BusinessIdForSequence;
-import com.mtl.hulk.sequence.IncrTimeSequence;
 
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class ReadCommitedExecutor extends HulkMvccExecutor {
+
+    private static final AtomicLong TRANSACTION_METHOD_ID = new AtomicLong(0);
 
     @Override
     public long init(String actionKey, Object args) {
         this.actionKey.set(actionKey);
-        long currentVersion = IncrTimeSequence.getInstance(BusinessIdForSequence.TRANSACTION_METHOD_ID.value()).nextId();
+        long currentVersion = TRANSACTION_METHOD_ID.incrementAndGet();
         if (snapshots.get(actionKey) == null) {
             snapshots.put(actionKey, new CopyOnWriteArrayList<Long>());
         }
