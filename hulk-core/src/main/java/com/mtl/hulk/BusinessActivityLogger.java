@@ -11,10 +11,10 @@ import java.util.List;
 
 public abstract class BusinessActivityLogger extends AbstractHulk {
 
-    protected final HulkSerializer serializer;
+    protected final Class<?> serializer;
     protected final HulkDataSource dataSource;
 
-    public BusinessActivityLogger(HulkDataSource ds, HulkSerializer serializer) {
+    public BusinessActivityLogger(HulkDataSource ds, Class<?> serializer) {
         this.dataSource = ds;
         this.serializer = serializer;
     }

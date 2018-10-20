@@ -3,27 +3,41 @@ package com.mtl.hulk.serializer;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import com.mtl.hulk.HulkSerializer;
+import com.mtl.hulk.serializer.kryo.BitSetSerializer;
+import org.objenesis.strategy.StdInstantiatorStrategy;
 
-public class KryoSerializer implements HulkSerializer {
+import java.util.BitSet;
 
-    @Override
-    public boolean write(Object obj, Class<?> clazz, Output output) throws Exception {
-        //获取kryo对象
-        Kryo kryo = new Kryo();
-        kryo.register(clazz);
-        kryo.writeObject(output, obj);
-        output.flush();
-        return true;
+public class KryoSerializer {
+
+    private static ThreadLocal<Kryo> _Kryo = new ThreadLocal<>();
+
+    public static byte[] serialize(Object obj) {
+        Kryo kryo = getKryo();
+        Output output = new Output(1024, 8 * 1024 * 1024);
+        _Kryo.get().writeObject(output, obj);
+        return output.toBytes();
     }
 
-    @Override
-    public <T> T read(Class<T> clazz, Input input) throws Exception {
-        T object;
-        Kryo kryo = new Kryo();
-        object = kryo.readObject(input, clazz);
-        input.close();
-        return object;
+    public static  <T> T deserialize(byte[] bytes, Class<T> clazz) {
+        Kryo kryo = getKryo();
+        Input input = new Input(bytes);
+        return kryo.readObject(input, clazz);
+    }
+
+    public <T> T copy(T origin, Class<T> clazz) {
+        byte[] bytes = serialize(origin);
+        return deserialize(bytes, clazz);
+    }
+
+    public static Kryo getKryo() {
+        if (_Kryo.get() == null) {
+            Kryo kryo = new Kryo();
+            kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
+            kryo.register(BitSet.class, new BitSetSerializer());
+            _Kryo.set(kryo);
+        }
+        return _Kryo.get();
     }
 
 }
