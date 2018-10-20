@@ -1,12 +1,11 @@
 package com.mtl.hulk;
 
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
-
 public interface HulkSerializer {
 
-    boolean write(Object obj, Class<?> clazz, Output output) throws Exception;
+    byte[] serialize(Object obj);
 
-    <T> T read(Class<T> clazz, Input input) throws Exception;
+    <T> T deserialize(byte[] bytes, Class<T> clazz);
+
+    <T> T copy(T origin, Class<T> clazz);
 
 }

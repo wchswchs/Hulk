@@ -3,7 +3,6 @@ package com.mtl.hulk.logger.data.sql;
 import com.alibaba.fastjson.JSONObject;
 import com.mtl.hulk.BusinessActivityLogger;
 import com.mtl.hulk.db.HulkDataSource;
-import com.mtl.hulk.HulkSerializer;
 import com.mtl.hulk.context.BusinessActivityContext;
 import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.context.RuntimeContext;
@@ -22,7 +21,7 @@ public class MySQLLoggerStorage extends BusinessActivityLogger {
 
     private final Logger logger = LoggerFactory.getLogger(MySQLLoggerStorage.class);
 
-    public MySQLLoggerStorage(HulkDataSource dataSource, HulkSerializer serializer) {
+    public MySQLLoggerStorage(HulkDataSource dataSource, Class<?> serializer) {
         super(dataSource, serializer);
     }
 
