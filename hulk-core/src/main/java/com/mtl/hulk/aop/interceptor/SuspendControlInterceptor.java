@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class SuspendControlInterceptor implements HulkInterceptor, MethodInterceptor {
 
     private Map<String, CopyOnWriteArrayList<Thread>> commitTheads = new ConcurrentHashMap<String, CopyOnWriteArrayList<Thread>>();
+    private Map<String, CopyOnWriteArrayList<Thread>> tryTheads = new ConcurrentHashMap<String, CopyOnWriteArrayList<Thread>>();
     private AtomicReference<String> methodKey = new AtomicReference<String>();
 
     @Override
@@ -34,6 +35,16 @@ public class SuspendControlInterceptor implements HulkInterceptor, MethodInterce
 
         Thread currentThread = Thread.currentThread();
         if (methodInvocation.getMethod().getAnnotation(MTLSuspendControl.class).value() ==
+                BusinessActivityExecutionType.TRY) {
+            methodKey.set(transactionId + "_" + methodInvocation.getMethod().getName());
+            if (tryTheads.get(methodKey.get()) == null) {
+                tryTheads.put(methodKey.get(), new CopyOnWriteArrayList<Thread>());
+            }
+            if (tryTheads.get(methodKey.get()) != null) {
+                tryTheads.get(methodKey.get()).add(currentThread);
+            }
+        }
+        if (methodInvocation.getMethod().getAnnotation(MTLSuspendControl.class).value() ==
             BusinessActivityExecutionType.COMMIT) {
             methodKey.set(transactionId + "_" + methodInvocation.getMethod().getName());
             if (commitTheads.get(methodKey.get()) == null) {
@@ -45,6 +56,13 @@ public class SuspendControlInterceptor implements HulkInterceptor, MethodInterce
         }
         if (methodInvocation.getMethod().getAnnotation(MTLSuspendControl.class).value() ==
             BusinessActivityExecutionType.ROLLBACK) {
+            if (tryTheads.size() > 0) {
+                if (tryTheads.get(methodKey.get()).size() > 0) {
+                    for (Thread t : tryTheads.get(methodKey.get())) {
+                        t.interrupt();
+                    }
+                }
+            }
             if (commitTheads.size() > 0) {
                 if (commitTheads.get(methodKey.get()).size() > 0) {
                     for (Thread t : commitTheads.get(methodKey.get())) {

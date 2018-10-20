@@ -2,16 +2,17 @@ package com.mtl.hulk.model;
 
 public enum BusinessActivityExecutionType {
 
-    COMMIT("1"),
-    ROLLBACK("2");
+    TRY(1),
+    COMMIT(2),
+    ROLLBACK(3);
 
-    private String i;
+    private int i;
 
-    private BusinessActivityExecutionType(String i) {
+    private BusinessActivityExecutionType(int i) {
         this.i = i;
     }
 
-    public String value() {
+    public int value() {
         return this.i;
     }
 
