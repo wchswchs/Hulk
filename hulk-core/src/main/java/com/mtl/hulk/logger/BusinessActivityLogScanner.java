@@ -3,7 +3,7 @@ package com.mtl.hulk.logger;
 import com.mtl.hulk.BusinessActivityLogger;
 import com.mtl.hulk.BusinessActivityLoggerFactory;
 import com.mtl.hulk.configuration.HulkProperties;
-import com.mtl.hulk.io.FastFile;
+import com.mtl.hulk.snapshot.FastFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

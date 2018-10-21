@@ -16,12 +16,12 @@
             <dependency>
                 <groupId>com.mtl.hulk</groupId>
                 <artifactId>hulk-tools</artifactId>
-                <version>${project.version}</version>
+                <version>${project.parent.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.mtl.hulk</groupId>
                 <artifactId>hulk-common</artifactId>
-                <version>${project.version}</version>
+                <version>${project.parent.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

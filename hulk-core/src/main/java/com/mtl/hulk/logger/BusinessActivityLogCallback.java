@@ -2,7 +2,7 @@ package com.mtl.hulk.logger;
 
 import com.mtl.hulk.BusinessActivityLogger;
 import com.mtl.hulk.context.HulkContext;
-import com.mtl.hulk.io.HulkFileCallback;
+import com.mtl.hulk.snapshot.HulkFileCallback;
 import com.mtl.hulk.serializer.KryoSerializer;
 
 public class BusinessActivityLogCallback extends HulkFileCallback<HulkContext> {

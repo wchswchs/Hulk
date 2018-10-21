@@ -148,6 +148,7 @@
         <module>hulk-database</module>
         <module>hulk-tools</module>
         <module>hulk-common</module>
+        <module>hulk-snapshot</module>
         <module>hulk-extensions</module>
         <module>hulk-serviceA</module>
         <module>hulk-serviceB</module>

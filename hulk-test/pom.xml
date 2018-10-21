@@ -16,7 +16,7 @@
             <dependency>
                 <groupId>com.mtl.hulk</groupId>
                 <artifactId>hulk-core</artifactId>
-                <version>${project.version}</version>
+                <version>${project.parent.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

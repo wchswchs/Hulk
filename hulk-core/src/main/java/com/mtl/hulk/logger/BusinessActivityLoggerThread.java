@@ -4,7 +4,7 @@ import com.mtl.hulk.AbstractHulk;
 import com.mtl.hulk.common.Constants;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.HulkContext;
-import com.mtl.hulk.io.FastFile;
+import com.mtl.hulk.snapshot.FastFile;
 import com.mtl.hulk.serializer.KryoSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
