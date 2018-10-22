@@ -25,7 +25,7 @@ public class HulkProperties {
     private int retryTranactionCount = 3;
     private String snapShotLogDir = "/data/hulk";
     private int logScanPeriod = 5;
-    private int txLogBufferSize = 10 * 1024;
+    private int txLogBufferSize = 20 * 1024;
     private int txLogLimit = 5;
 
     public void setRetryTranactionCount(int retryTranactionCount) {

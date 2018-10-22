@@ -2,6 +2,7 @@ package com.mtl.hulk.logger;
 
 import com.mtl.hulk.BusinessActivityLogger;
 import com.mtl.hulk.BusinessActivityLoggerFactory;
+import com.mtl.hulk.HulkResourceManager;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.serializer.kryo.KryoSerializer;
@@ -24,6 +25,9 @@ public class BusinessActivityLogScanner implements Runnable {
 
     @Override
     public void run() {
+        if (HulkResourceManager.getClients().size() == 0) {
+            return;
+        }
         logger.info("Scanning Transaction Log......");
         File logFileWriteDir = new File(properties.getSnapShotLogDir());
         File[] logFiles = logFileWriteDir.listFiles();

@@ -37,6 +37,9 @@ public class MySQLLoggerStorage extends BusinessActivityLogger {
         try {
             ptmt = dataSource.prepareStatement(sql);
             for (HulkContext ctx : ctxs) {
+                if (ctx == null) {
+                    continue;
+                }
                 ptmt.setString(1, getBusinessActivityIdStr(ctx.getRc().getActivity().getId()));
                 ptmt.setInt(2, ctx.getRc().getActivity().getStatus().getCode());
                 ptmt.setDate(3, new Date(ctx.getRc().getActivity().getStartTime().getTime()));

@@ -5,17 +5,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AutoIncrementGenerator {
 
     private final static AtomicInteger factor = new AtomicInteger(1);
+    private volatile static Integer currentValue;
 
-    public static Integer getFactor() {
-        return factor.get();
+    public synchronized static void setCurrentValue(Integer currentValue) {
+        AutoIncrementGenerator.currentValue = currentValue;
     }
 
-    public static void setFactor(Integer val) {
-        factor.set(val);
+    public synchronized static Integer getCurrentValue() {
+        if (currentValue == null) {
+            currentValue = 1;
+        }
+        return currentValue;
     }
 
-    public static Integer incrementAndGet() {
-        return factor.incrementAndGet();
+    public static AtomicInteger getFactor() {
+        return factor;
     }
 
 }

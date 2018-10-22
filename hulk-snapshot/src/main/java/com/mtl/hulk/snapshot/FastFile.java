@@ -46,36 +46,46 @@ public class FastFile {
             bytes = fileChannel.read(byteBuffer, getReadStartPosition());
             if (bytes <= bufferlen) {
                 byteBuffer.flip();
-                datas.add((T) serializer.deserialize(byteBuffer.array(), targetClass));
+                try {
+                    datas.add((T) serializer.deserialize(byteBuffer.array(), targetClass));
+                } catch (IndexOutOfBoundsException e) {
+                    continue;
+                }
             }
             setReadStartPosition(Long.valueOf(bytes) + getReadStartPosition());
         }
     }
 
-    public int write(byte[] bytes) {
+    public synchronized boolean write(byte[] bytes) {
         try {
             ByteBuffer byteBuffer = ByteBuffer.allocate(bufferlen);
             byteBuffer.clear();
             byteBuffer.put(bytes);
             byteBuffer.clear();
-            return fileChannel.write(byteBuffer);
+            do {
+                fileChannel.write(byteBuffer);
+            } while (byteBuffer.hasRemaining());
+            return true;
         } catch (IOException ex) {
             logger.error("Write File Error", ex);
         }
-        return -1;
+        return false;
     }
 
-    public int write(byte[] bytes, long startPosition) {
+    public synchronized boolean write(byte[] bytes, long startPosition) {
         try {
             ByteBuffer byteBuffer = ByteBuffer.allocate(bufferlen);
             byteBuffer.clear();
             byteBuffer.put(bytes);
             byteBuffer.clear();
-            return fileChannel.write(byteBuffer, startPosition);
+            do {
+                fileChannel.write(byteBuffer, startPosition);
+            } while (byteBuffer.hasRemaining());
+            return true;
         } catch (IOException ex) {
             logger.error("Write File Error", ex);
         }
-        return -1;
+        return false;
     }
 
     public void setStartPosition(Long startPosition) {

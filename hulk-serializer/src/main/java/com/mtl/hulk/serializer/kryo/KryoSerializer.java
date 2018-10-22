@@ -28,7 +28,7 @@ public class KryoSerializer extends HulkSerializer<Kryo> {
     public <R> R deserialize(byte[] bytes, Class<R> clazz) {
         Kryo kryo = getSerializer(Kryo.class);
         Input input = new Input(bytes);
-        return kryo.readObject(input, clazz);
+        return kryo.readObjectOrNull(input, clazz);
     }
 
     @Override
