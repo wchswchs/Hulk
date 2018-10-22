@@ -49,6 +49,7 @@ public class FastFile {
                 try {
                     datas.add((T) serializer.deserialize(byteBuffer.array(), targetClass));
                 } catch (IndexOutOfBoundsException e) {
+                    setReadStartPosition(Long.valueOf(bytes) + getReadStartPosition());
                     continue;
                 }
             }
