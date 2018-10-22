@@ -1,9 +1,8 @@
 package com.mtl.hulk;
 
-import com.mtl.hulk.context.BusinessActivityContext;
+import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.db.HulkDataSource;
 import com.mtl.hulk.model.*;
-import com.mtl.hulk.context.RuntimeContext;
 import org.apache.commons.lang3.StringUtils;
 
 import java.sql.SQLException;
@@ -19,7 +18,7 @@ public abstract class BusinessActivityLogger extends AbstractHulk {
         this.serializer = serializer;
     }
 
-    public abstract boolean write(RuntimeContext context, BusinessActivityContext businessActivityContext) throws SQLException;
+    public abstract boolean write(List<HulkContext> ctx) throws SQLException;
 
     public abstract List<HulkTransactionActivity> read(int size) throws SQLException;
 

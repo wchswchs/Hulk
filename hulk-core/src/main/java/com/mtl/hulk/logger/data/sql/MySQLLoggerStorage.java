@@ -26,30 +26,25 @@ public class MySQLLoggerStorage extends BusinessActivityLogger {
     }
 
     @Override
-    public boolean write(RuntimeContext context, BusinessActivityContext businessActivityContext) throws SQLException {
-        boolean businessActivityLog = writeBusinessActivityLog(context, businessActivityContext);
-        if (businessActivityLog == true) {
-            return true;
-        }
-        return false;
-    }
-
-    private boolean writeBusinessActivityLog(RuntimeContext context, BusinessActivityContext businessActivityContext) throws SQLException {
-        if (null == context) {
+    public boolean write(List<HulkContext> ctxs) throws SQLException {
+        if (null == ctxs) {
             return false;
         }
 
-        String sql1 = "REPLACE INTO tm_business_activity_log(businessActivityId,businessActivityStatus,startTime,runtimeContext,businessActivityContext) " +
+        String sql = "INSERT IGNORE INTO tm_business_activity_log(businessActivityId,businessActivityStatus,startTime,runtimeContext,businessActivityContext) " +
                 "VALUES (?, ?, ?,?,?)";
         PreparedStatement ptmt = null;
         try {
-            ptmt = dataSource.prepareStatement(sql1);
-            ptmt.setString(1, getBusinessActivityIdStr(context.getActivity().getId()));
-            ptmt.setInt(2, context.getActivity().getStatus().getCode());
-            ptmt.setDate(3, new Date(context.getActivity().getStartTime().getTime()));
-            ptmt.setString(4, JSONObject.toJSONString(context));
-            ptmt.setString(5, JSONObject.toJSONString(businessActivityContext));
-            if (ptmt.executeUpdate() > 0) {
+            ptmt = dataSource.prepareStatement(sql);
+            for (HulkContext ctx : ctxs) {
+                ptmt.setString(1, getBusinessActivityIdStr(ctx.getRc().getActivity().getId()));
+                ptmt.setInt(2, ctx.getRc().getActivity().getStatus().getCode());
+                ptmt.setDate(3, new Date(ctx.getRc().getActivity().getStartTime().getTime()));
+                ptmt.setString(4, JSONObject.toJSONString(ctx.getRc()));
+                ptmt.setString(5, JSONObject.toJSONString(ctx.getBac()));
+                ptmt.addBatch();
+            }
+            if (ptmt.executeBatch().length > 0) {
                 return true;
             }
             return false;
@@ -59,7 +54,6 @@ public class MySQLLoggerStorage extends BusinessActivityLogger {
             ptmt.close();
         }
     }
-
 
     @Override
     public List<HulkTransactionActivity> read(int size) throws SQLException {

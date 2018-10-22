@@ -10,4 +10,21 @@
     </parent>
 
     <artifactId>hulk-snapshot</artifactId>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.mtl.hulk</groupId>
+                <artifactId>hulk-serializer</artifactId>
+                <version>${project.parent.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.mtl.hulk</groupId>
+            <artifactId>hulk-serializer</artifactId>
+        </dependency>
+    </dependencies>
 </project>

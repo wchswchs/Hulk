@@ -38,6 +38,11 @@
                 <artifactId>hulk-snapshot</artifactId>
                 <version>${project.parent.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.mtl.hulk</groupId>
+                <artifactId>hulk-serializer</artifactId>
+                <version>${project.parent.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -69,6 +74,10 @@
         <dependency>
             <groupId>com.mtl.hulk</groupId>
             <artifactId>hulk-snapshot</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mtl.hulk</groupId>
+            <artifactId>hulk-serializer</artifactId>
         </dependency>
     </dependencies>
 </project>

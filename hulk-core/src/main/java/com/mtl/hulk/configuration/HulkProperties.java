@@ -1,6 +1,6 @@
 package com.mtl.hulk.configuration;
 
-import com.mtl.hulk.serializer.KryoSerializer;
+import com.mtl.hulk.serializer.kryo.KryoSerializer;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -24,9 +24,9 @@ public class HulkProperties {
     private String transIdSequence = "timestamp";
     private int retryTranactionCount = 3;
     private String snapShotLogDir = "/data/hulk";
-    private int logScanPeriod = 10;
+    private int logScanPeriod = 5;
     private int txLogBufferSize = 10 * 1024;
-    private int txLogSizeLimit = 1024 * 1024;
+    private int txLogLimit = 5;
 
     public void setRetryTranactionCount(int retryTranactionCount) {
         this.retryTranactionCount = retryTranactionCount;
@@ -160,8 +160,8 @@ public class HulkProperties {
         return txLogBufferSize;
     }
 
-    public int getTxLogSizeLimit() {
-        return txLogSizeLimit;
+    public int getTxLogLimit() {
+        return txLogLimit;
     }
 
 }

@@ -33,7 +33,9 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
                                         TimeUnit.SECONDS, new SynchronousQueue<>(),
                                         (new ThreadFactoryBuilder()).setNameFormat("Hulk-Log-Thread-%d").build());
     private final ScheduledExecutorService logScanner = Executors.newScheduledThreadPool(1,
-                                            (new ThreadFactoryBuilder()).setNameFormat("Log-Scanner-%d").build());
+                                            (new ThreadFactoryBuilder()).setNameFormat("Log-Scanner-%d")
+                                            .setDaemon(true)
+                                            .build());
 
     public BusinessActivityManagerImpl(HulkProperties properties, ApplicationContext applicationContext) {
         super(properties, applicationContext);
