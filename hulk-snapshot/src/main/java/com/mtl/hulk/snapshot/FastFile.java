@@ -51,6 +51,9 @@ public class FastFile {
                 } catch (IndexOutOfBoundsException e) {
                     setReadStartPosition(Long.valueOf(bytes) + getReadStartPosition());
                     continue;
+                } catch (Exception e) {
+                    setReadStartPosition(Long.valueOf(bytes) + getReadStartPosition());
+                    continue;
                 }
             }
             setReadStartPosition(Long.valueOf(bytes) + getReadStartPosition());
