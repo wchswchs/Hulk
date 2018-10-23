@@ -50,11 +50,7 @@ public class BusinessActivityLoggerThread extends AbstractHulk implements Runnab
         } catch (Exception e) {
             logger.error("Hulk Log Write Exception", e);
         } finally {
-            try {
-                logFile.getFile().close();
-            } catch (IOException ex) {
-                logger.error("Close File Error", ex);
-            }
+            logFile.close();
         }
     }
 
