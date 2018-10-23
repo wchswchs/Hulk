@@ -23,10 +23,7 @@ public class HulkProperties {
     private Class<?> logSerialize = KryoSerializer.class;
     private String transIdSequence = "timestamp";
     private int retryTranactionCount = 3;
-    private String snapShotLogDir = "/data/hulk";
-    private int logScanPeriod = 5;
-    private int txLogBufferSize = 20 * 1024;
-    private int txLogLimit = 5;
+    private int logScanPeriod = 2;
 
     public void setRetryTranactionCount(int retryTranactionCount) {
         this.retryTranactionCount = retryTranactionCount;
@@ -140,28 +137,12 @@ public class HulkProperties {
         return tryMaxThreadPoolSize;
     }
 
-    public void setSnapShotLogDir(String snapShotLogDir) {
-        this.snapShotLogDir = snapShotLogDir;
-    }
-
-    public String getSnapShotLogDir() {
-        return snapShotLogDir;
-    }
-
     public int getLogScanPeriod() {
         return logScanPeriod;
     }
 
     public void setLogScanPeriod(int logScanPeriod) {
         this.logScanPeriod = logScanPeriod;
-    }
-
-    public int getTxLogBufferSize() {
-        return txLogBufferSize;
-    }
-
-    public int getTxLogLimit() {
-        return txLogLimit;
     }
 
 }

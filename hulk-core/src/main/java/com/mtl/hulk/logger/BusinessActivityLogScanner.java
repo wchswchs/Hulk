@@ -6,7 +6,7 @@ import com.mtl.hulk.HulkResourceManager;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.serializer.kryo.KryoSerializer;
-import com.mtl.hulk.snapshot.FastFile;
+import com.mtl.hulk.snapshot.io.FastFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +29,7 @@ public class BusinessActivityLogScanner implements Runnable {
             return;
         }
         logger.info("Scanning Transaction Log......");
-        File logFileWriteDir = new File(properties.getSnapShotLogDir());
+        File logFileWriteDir = new File(HulkResourceManager.getSnapShot().getProperties().getDir());
         File[] logFiles = logFileWriteDir.listFiles();
         BusinessActivityLogger bal = BusinessActivityLoggerFactory.getStorage(properties);
         File runFile = null;
@@ -37,9 +37,11 @@ public class BusinessActivityLogScanner implements Runnable {
             if (logFiles != null) {
                 int i = 0;
                 for (File f : logFiles) {
-                    Thread.sleep(2000);
+                    Thread.sleep(1000);
+                    logger.info("Scanning File: {}", f.getName());
                     runFile = f;
-                    FastFile ff = new FastFile(f, "r", properties.getTxLogBufferSize());
+                    FastFile ff = new FastFile(f, "r", HulkResourceManager.getSnapShot().getProperties()
+                                                .getBufferSize());
                     List<HulkContext> datas = ff.read(new KryoSerializer(), HulkContext.class);
                     if (datas != null) {
                         if (bal.write(datas)) {
