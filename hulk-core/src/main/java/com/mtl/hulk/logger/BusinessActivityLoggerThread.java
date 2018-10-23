@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 
 public class BusinessActivityLoggerThread extends AbstractHulk implements Runnable {
 
@@ -45,7 +44,7 @@ public class BusinessActivityLoggerThread extends AbstractHulk implements Runnab
             HulkSerializer serializer = new KryoSerializer();
             byte[] ctxLog = serializer.serialize(ctx);
             ctx.getRc().setException(new HulkException());
-            boolean ret = logFile.write(ctxLog, logFile.getFile().length());
+            logFile.write(ctxLog, logFile.getFile().length());
             logger.info("Writing Transaction SnapShot End！");
         } catch (Exception e) {
             logger.error("Hulk Log Write Exception", e);
