@@ -151,6 +151,7 @@
         <module>hulk-serializer</module>
         <module>hulk-snapshot</module>
         <module>hulk-extensions</module>
+        <module>hulk-benchmark</module>
         <module>hulk-serviceA</module>
         <module>hulk-serviceB</module>
         <module>hulk-serviceC</module>

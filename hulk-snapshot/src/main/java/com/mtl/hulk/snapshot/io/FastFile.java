@@ -115,4 +115,12 @@ public class FastFile {
         return file;
     }
 
+    public void close() {
+        try {
+            file.close();
+        } catch (IOException ex) {
+            logger.error("Close File Error", ex);
+        }
+    }
+
 }
