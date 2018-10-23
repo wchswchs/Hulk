@@ -33,7 +33,9 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
                                         TimeUnit.SECONDS, new SynchronousQueue<>(),
                                         (new ThreadFactoryBuilder()).setNameFormat("Hulk-Log-Thread-%d").build());
     private final ScheduledExecutorService logScanner = Executors.newScheduledThreadPool(1,
-                                            (new ThreadFactoryBuilder()).setNameFormat("Log-Scanner-%d").build());
+                                            (new ThreadFactoryBuilder()).setNameFormat("Log-Scanner-%d")
+                                            .setDaemon(true)
+                                            .build());
 
     public BusinessActivityManagerImpl(HulkProperties properties, ApplicationContext applicationContext) {
         super(properties, applicationContext);
@@ -116,12 +118,24 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
      * @param subContext
      */
     private void updateContext(Object subContext) {
-        RuntimeContextHolder.getContext().getActivity().getAtomicTryActions().addAll(
-                ((HulkContext) subContext).getRc().getActivity().getAtomicTryActions());
-        RuntimeContextHolder.getContext().getActivity().getAtomicCommitActions().addAll(
-                ((HulkContext) subContext).getRc().getActivity().getAtomicCommitActions());
-        RuntimeContextHolder.getContext().getActivity().getAtomicRollbackActions().addAll(
-                ((HulkContext) subContext).getRc().getActivity().getAtomicRollbackActions());
+        if (!RuntimeContextHolder.getContext().getActivity().getAtomicTryActions().containsAll(
+                ((HulkContext) subContext).getRc().getActivity().getAtomicTryActions()
+        )) {
+            RuntimeContextHolder.getContext().getActivity().getAtomicTryActions().addAll(
+                    ((HulkContext) subContext).getRc().getActivity().getAtomicTryActions());
+        }
+        if (!RuntimeContextHolder.getContext().getActivity().getAtomicTryActions().containsAll(
+                ((HulkContext) subContext).getRc().getActivity().getAtomicCommitActions()
+        )) {
+            RuntimeContextHolder.getContext().getActivity().getAtomicCommitActions().addAll(
+                    ((HulkContext) subContext).getRc().getActivity().getAtomicCommitActions());
+        }
+        if (!RuntimeContextHolder.getContext().getActivity().getAtomicTryActions().containsAll(
+                ((HulkContext) subContext).getRc().getActivity().getAtomicRollbackActions()
+        )) {
+            RuntimeContextHolder.getContext().getActivity().getAtomicRollbackActions().addAll(
+                    ((HulkContext) subContext).getRc().getActivity().getAtomicRollbackActions());
+        }
         BusinessActivityContextHolder.getContext().getParams().putAll(
                 ((HulkContext) subContext).getBac().getParams());
     }

@@ -1,6 +1,7 @@
 package com.mtl.hulk;
 
 import com.mtl.hulk.context.BusinessActivityContext;
+import com.mtl.hulk.context.HulkContext;
 import com.mtl.hulk.model.*;
 import com.mtl.hulk.context.RuntimeContext;
 import org.junit.Assert;
@@ -74,7 +75,11 @@ public class BusinessActivityLogManagerTest extends AbstractHulkTest {
         params.put("123", objects1);
         params.put("124", objects2);
         businessActivityContext.setParams(params);
-        logger.write(context, businessActivityContext);
+
+        List<HulkContext> contexts = new ArrayList<>();
+        contexts.add(new HulkContext(businessActivityContext, context));
+
+        logger.write(contexts);
     }
 
     @Test
