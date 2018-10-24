@@ -89,6 +89,14 @@ public NetworkCommunication communication() {
 
 * mtl.logScanPeriod：该属性设置事务日志快照扫描周期，默认：20s
 
+* mtl.hulk.snapshot.rule：该属性设置本地快照分割策略，默认：increment，自然数自增分割
+
+* mtl.hulk.snapshot.bufferSize：该属性指定读取/写入缓冲区大小，单位Byte，默认：20K
+
+* mtl.hulk.snapshot.dir：该属性指定本地快照存储目录，默认：/data/hulk
+
+* mtl.hulk.snapshot.perFileSize：该属性设置单个快照存储记录数，默认：1000
+
 * mtl.hulk.logMasters：该属性指定事务日志存储master，例如：mysql定义如下：
 
 ```java
