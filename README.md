@@ -85,7 +85,7 @@ public NetworkCommunication communication() {
 
 * mtl.hulk.loggerStorage：该属性指定事务日志存储介质，默认：mysql
 
-* mtl.logScanPeriod：该属性设置事务日志快照扫描周期，默认：20s
+* mtl.logScanPeriod：该属性设置本地事务日志快照扫描周期，默认：20s
 
 * mtl.hulk.snapshot.rule：该属性设置本地快照分割策略，默认：increment，自然数自增分割
 
