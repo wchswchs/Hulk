@@ -1,6 +1,6 @@
 spring:
   application:
-    name: hulk-job
+    name: hulk-task
 eureka:
   instance:
       preferIpAddress: true
@@ -8,4 +8,4 @@ eureka:
     serviceUrl:
       defaultZone: ${eureka.serviceUrl.defaultZone}
 logging:
-  config: /apps/config/logconfig/hulk-job-logback.xml
+  config: /opt/logconfig/hulk-task-logback.xml

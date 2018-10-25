@@ -3,12 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>hulk-job</artifactId>
-    <groupId>com.mtl.hulk.job</groupId>
-    <version>1.0.1</version>
-    <packaging>jar</packaging>
-    <name>hulk-task</name>
-    <description>jobs of hulk</description>
+    <artifactId>hulk-task</artifactId>
 
     <parent>
         <artifactId>hulk</artifactId>
@@ -70,10 +65,9 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                     <encoding>UTF8</encoding>
-                    <compilerVersion>${maven.compiler.compilerVersion}</compilerVersion>
                 </configuration>
             </plugin>
             <plugin>
