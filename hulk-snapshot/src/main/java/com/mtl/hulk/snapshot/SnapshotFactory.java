@@ -1,7 +1,7 @@
 package com.mtl.hulk.snapshot;
 
 import  com.mtl.hulk.snapshot.conf.SnapshotProperties;
-import com.mtl.hulk.snapshot.rule.IncrementShardingRule1;
+import com.mtl.hulk.snapshot.rule.IncrementShardingRule;
 import com.mtl.hulk.snapshot.rule.Quota;
 
 public class SnapshotFactory {
@@ -12,21 +12,21 @@ public class SnapshotFactory {
         this.properties = properties;
     }
 
-    public Snapshot1 createSnapshot(int bufferSize, int perFileSize) {
-        SnapshotRule1 rule = selectRule(properties.getRule(), new Quota(bufferSize, perFileSize));
-        return new Snapshot1(new SnapshotHeader1(properties.getDir()), rule);
+    public Snapshot createSnapshot(int bufferSize, int perFileSize) {
+        SnapshotRule rule = selectRule(properties.getRule(), new Quota(bufferSize, perFileSize));
+        return new Snapshot(new SnapshotHeader(properties.getDir()), rule);
     }
 
-    public Snapshot1 createSnapshot(String header, int bufferSize, int perFileSize) {
-        SnapshotRule1 rule = selectRule(properties.getRule(), new Quota(bufferSize, perFileSize));
-        SnapshotHeader1 sHeader = new SnapshotHeader1(properties.getDir(), header);
+    public Snapshot createSnapshot(String header, int bufferSize, int perFileSize) {
+        SnapshotRule rule = selectRule(properties.getRule(), new Quota(bufferSize, perFileSize));
+        SnapshotHeader sHeader = new SnapshotHeader(properties.getDir(), header);
 
-        return new Snapshot1(sHeader, rule);
+        return new Snapshot(sHeader, rule);
     }
 
-    private SnapshotRule1 selectRule(String rule, Quota quota) {
+    private SnapshotRule selectRule(String rule, Quota quota) {
         if (rule == "increment") {
-            return new IncrementShardingRule1(quota);
+            return new IncrementShardingRule(quota);
         }
         return null;
     }

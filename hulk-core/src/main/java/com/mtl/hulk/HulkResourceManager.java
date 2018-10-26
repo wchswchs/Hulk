@@ -2,7 +2,7 @@ package com.mtl.hulk;
 
 import com.mtl.hulk.bam.BusinessActivityManagerImpl;
 import com.mtl.hulk.db.HulkDataSource;
-import com.mtl.hulk.snapshot.Snapshot1;
+import com.mtl.hulk.snapshot.Snapshot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,7 @@ public class HulkResourceManager {
 
     private static final List<HulkInterceptor> interceptors = new ArrayList<HulkInterceptor>();
     private static HulkDataSource datasource;
-    private static Snapshot1 snapShot;
+    private static Snapshot snapShot;
     private static BusinessActivityManagerImpl bam;
     private static final Map<String, Object> clients = new ConcurrentHashMap<String, Object>();
 
@@ -37,11 +37,11 @@ public class HulkResourceManager {
         return datasource;
     }
 
-    public static void setSnapShot(Snapshot1 snapShot) {
+    public static void setSnapShot(Snapshot snapShot) {
         HulkResourceManager.snapShot = snapShot;
     }
 
-    public static Snapshot1 getSnapShot() {
+    public static Snapshot getSnapShot() {
         return snapShot;
     }
 
