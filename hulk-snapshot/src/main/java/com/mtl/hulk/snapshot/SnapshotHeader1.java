@@ -1,15 +1,15 @@
 package com.mtl.hulk.snapshot;
 
-public class SnapshotHeader {
+public class SnapshotHeader1 {
 
     private String dir;
     private String fileName;
 
-    public SnapshotHeader(String dir) {
+    public SnapshotHeader1(String dir) {
         this.dir = dir;
     }
 
-    public SnapshotHeader(String dir, String fileName) {
+    public SnapshotHeader1(String dir, String fileName) {
         this.dir = dir;
         this.fileName = fileName;
     }

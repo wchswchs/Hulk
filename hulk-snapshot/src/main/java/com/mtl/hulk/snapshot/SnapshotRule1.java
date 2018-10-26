@@ -4,14 +4,14 @@ import com.mtl.hulk.snapshot.rule.Quota;
 
 import java.io.File;
 
-public abstract class SnapshotRule {
+public abstract class SnapshotRule1 {
 
     protected Quota quota;
 
-    public SnapshotRule() {
+    public SnapshotRule1() {
     }
 
-    public SnapshotRule(Quota quota) {
+    public SnapshotRule1(Quota quota) {
         this.quota = quota;
     }
 
@@ -23,6 +23,6 @@ public abstract class SnapshotRule {
         return quota;
     }
 
-    public abstract File run(SnapshotHeader header);
+    public abstract File run(SnapshotHeader1 header);
 
 }

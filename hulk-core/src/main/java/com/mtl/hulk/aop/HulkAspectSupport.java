@@ -7,7 +7,7 @@ import com.mtl.hulk.HulkInterceptor;
 import com.mtl.hulk.extension.NetworkCommunication;
 import com.mtl.hulk.bam.BusinessActivityManagerImpl;
 import com.mtl.hulk.configuration.HulkProperties;
-import com.mtl.hulk.snapshot.Snapshot;
+import com.mtl.hulk.snapshot.Snapshot1;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -39,7 +39,7 @@ public abstract class HulkAspectSupport extends AbstractHulk implements Initiali
             HulkResourceManager.setDatasource((HulkDataSource) bean);
         }
         if (beanName.equals("snapShot")) {
-            HulkResourceManager.setSnapShot((Snapshot) bean);
+            HulkResourceManager.setSnapShot((Snapshot1) bean);
         }
         if (beanName.equals("hulkTransactionInterceptor")
                     || beanName.equals("hulkBrokerInterceptor")) {

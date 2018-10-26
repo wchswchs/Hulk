@@ -3,10 +3,10 @@ package com.mtl.hulk.bench.snapshot;
 import com.mtl.hulk.bench.AbstractBenchmark;
 import com.mtl.hulk.bench.model.OrderEntry;
 import com.mtl.hulk.serializer.kryo.KryoSerializer;
-import com.mtl.hulk.snapshot.SnapshotHeader;
-import com.mtl.hulk.snapshot.SnapshotRule;
+import com.mtl.hulk.snapshot.SnapshotHeader1;
+import com.mtl.hulk.snapshot.SnapshotRule1;
 import com.mtl.hulk.snapshot.io.FastFile;
-import com.mtl.hulk.snapshot.rule.IncrementShardingRule;
+import com.mtl.hulk.snapshot.rule.IncrementShardingRule1;
 import com.mtl.hulk.snapshot.rule.Quota;
 import org.openjdk.jmh.annotations.*;
 
@@ -18,13 +18,13 @@ import java.util.concurrent.TimeUnit;
 @Warmup(iterations = 5)
 @Measurement(iterations = 5)
 @OutputTimeUnit(TimeUnit.SECONDS)
-public class SnapshotBenchmark extends AbstractBenchmark {
+public class Snapshot1Benchmark extends AbstractBenchmark {
 
     @Benchmark
     @BenchmarkMode(Mode.All)
     public void writeSnapshot() {
-        SnapshotHeader header = new SnapshotHeader("/data/hulk", "snapshot.test.log");
-        SnapshotRule rule = new IncrementShardingRule(new Quota(10 * 1024, 1000));
+        SnapshotHeader1 header = new SnapshotHeader1("/data/hulk", "snapshot.test.log");
+        SnapshotRule1 rule = new IncrementShardingRule1(new Quota(10 * 1024, 1000));
         File file = rule.run(header);
         FastFile ff = new FastFile(file, "rw", rule.getQuota().getBufferSize());
         KryoSerializer serializer = new KryoSerializer();
