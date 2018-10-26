@@ -3,16 +3,17 @@ package com.mtl.hulk.mvcc;
 import com.mtl.hulk.HulkMvccExecutor;
 
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 public class ReadCommitedExecutor extends HulkMvccExecutor {
 
-    private static final AtomicLong TRANSACTION_METHOD_ID = new AtomicLong(0);
+    private static final LongAdder TRANSACTION_METHOD_ID = new LongAdder();
 
     @Override
     public long init(String actionKey, Object args) {
         this.actionKey.set(actionKey);
-        long currentVersion = TRANSACTION_METHOD_ID.incrementAndGet();
+        TRANSACTION_METHOD_ID.increment();
+        long currentVersion = TRANSACTION_METHOD_ID.longValue();
         if (snapshots.get(actionKey) == null) {
             snapshots.put(actionKey, new CopyOnWriteArrayList<Long>());
         }

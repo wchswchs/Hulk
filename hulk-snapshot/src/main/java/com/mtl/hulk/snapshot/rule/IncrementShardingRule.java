@@ -21,7 +21,8 @@ public class IncrementShardingRule extends SnapshotRule {
         File snapshotFile = new File(header.getDir(), header.getFileName()
                                     + "." + AutoIncrementGenerator.getCurrentValue());
         if (snapshotFile.length() >= (quota.getBufferSize() * quota.getPerFileSize())) {
-            AutoIncrementGenerator.setCurrentValue(AutoIncrementGenerator.getFactor().incrementAndGet());
+            AutoIncrementGenerator.getFactor().increment();
+            AutoIncrementGenerator.setCurrentValue(AutoIncrementGenerator.getFactor().intValue());
             snapshotFile = new File(header.getDir(), header.getFileName()
                                         + "." + AutoIncrementGenerator.getFactor());
         }
