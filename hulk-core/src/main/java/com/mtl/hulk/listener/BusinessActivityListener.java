@@ -2,7 +2,6 @@ package com.mtl.hulk.listener;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.HulkListener;
-import com.mtl.hulk.HulkMvccExecutor;
 import com.mtl.hulk.configuration.HulkProperties;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
 import com.mtl.hulk.model.AtomicAction;
@@ -17,14 +16,12 @@ import org.springframework.context.ApplicationContext;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class BusinessActivityListener extends HulkListener {
 
     private final Logger logger = LoggerFactory.getLogger(BusinessActivityListener.class);
 
     private static final Map<String, CopyOnWriteArrayList<Future>> runFutures = new ConcurrentHashMap<String, CopyOnWriteArrayList<Future>>();
-    private AtomicReference<HulkMvccExecutor> executor = new AtomicReference<HulkMvccExecutor>();
     private final ExecutorService runExecutor = new ThreadPoolExecutor(properties.getActionthreadPoolSize(),
                                                 properties.getActionMaxThreadPoolSize(), 10L,
                                                 TimeUnit.SECONDS, new SynchronousQueue<>(),
@@ -84,17 +81,8 @@ public class BusinessActivityListener extends HulkListener {
             }
         } finally {
             runFutures.get(context.getActivity().getId().getSequence()).clear();
-            getExecutor().clear();
         }
         return true;
-    }
-
-    public HulkMvccExecutor getExecutor() {
-        return executor.get();
-    }
-
-    public void setExecutor(HulkMvccExecutor executor) {
-        this.executor.set(executor);
     }
 
     @Override

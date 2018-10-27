@@ -2,6 +2,7 @@ package com.mtl.hulk.mvcc;
 
 import com.mtl.hulk.HulkMvccExecutor;
 
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -23,16 +24,17 @@ public class ReadCommitedExecutor extends HulkMvccExecutor {
     }
 
     @Override
-    public long getCurrentVersion(long version) {
-        if (version <= snapshots.get(actionKey.get()).get(0)) {
-            return version;
-        }
+    public List<Long> getCurrentVersion(long version) {
         int index = snapshots.get(actionKey.get()).indexOf(version);
-        if (index == -1) {
-            index = 0;
+        if (version <= snapshots.get(actionKey.get()).get(0)) {
+            return snapshots.get(actionKey.get()).subList(index, index + 1);
         }
-        version = snapshots.get(actionKey.get()).get(snapshots.get(actionKey.get()).size() - (index + 1));
-        return getCurrentVersion(version);
+        for (int i = snapshots.get(actionKey.get()).size() - (index + 1); i >= 0 ; i --) {
+            if (snapshots.get(actionKey.get()).get(i) <= version) {
+                return snapshots.get(actionKey.get()).subList(0, i + 1);
+            }
+        }
+        return null;
     }
 
 }
