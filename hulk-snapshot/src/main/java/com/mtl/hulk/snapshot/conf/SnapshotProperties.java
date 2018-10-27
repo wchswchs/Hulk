@@ -3,7 +3,7 @@ package com.mtl.hulk.snapshot.conf;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties("mtl.hulk.snapshot")
-public class SnapShotProperties {
+public class SnapshotProperties {
 
     private String rule = "increment";
     private int bufferSize = 20 * 1024;

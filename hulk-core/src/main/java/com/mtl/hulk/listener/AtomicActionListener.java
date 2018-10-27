@@ -13,12 +13,14 @@ import org.springframework.context.ApplicationContext;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.List;
 
 public class AtomicActionListener extends HulkListener {
 
     private volatile AtomicAction tryAction;
     private volatile BusinessActivityContext bac;
     private volatile RuntimeContext hc;
+
     private final Logger logger = LoggerFactory.getLogger(AtomicActionListener.class);
 
     public AtomicActionListener(AtomicAction action, ApplicationContext applicationContext, AtomicAction tryAction,
@@ -39,7 +41,10 @@ public class AtomicActionListener extends HulkListener {
         RuntimeContextHolder.setContext(hc);
         if (action.getServiceOperation().getType() == ServiceOperationType.TCC) {
             Object object = null;
+            Object ret = null;
             Object args = bac;
+            String[] aid = hc.getActivity().getId().formatString().split("_");
+            String actionKey = "Transaction_" + aid[0] + "_" + aid[1] + "_" + action.getServiceOperation().getName();
             try {
                 if (applicationContext.getId().split(":")[0].equals(action.getServiceOperation().getService())) {
                     object = applicationContext.getBean(tryAction.getServiceOperation().getBeanClass());
@@ -48,14 +53,20 @@ public class AtomicActionListener extends HulkListener {
                 }
                 logger.info("Transaction Executor running: {}", action.getServiceOperation().getName());
                 Method method = object.getClass().getMethod(action.getServiceOperation().getName(), BusinessActivityContext.class);
-                String[] aid = hc.getActivity().getId().formatString().split("_");
                 HulkMvccExecutor mvccExecutor = HulkMvccFactory.getExecuter(hc.getActivity().getIsolationLevel());
                 if (mvccExecutor != null) {
-                    long currentVersion = mvccExecutor.init(
-                            "Transaction_" + aid[0] + "_" + aid[1] + "_" + action.getServiceOperation().getName(), bac);
-                    args = mvccExecutor.getActionArguments(mvccExecutor.getCurrentVersion(currentVersion));
+                    long currentVersion = mvccExecutor.init(actionKey, bac);
+                    List<Long> runVersions = mvccExecutor.getCurrentVersion(currentVersion);
+                    for (Long v : runVersions) {
+                        ret = method.invoke(object, mvccExecutor.getActionArguments(v));
+                        if (((boolean) ret) == false) {
+                            return false;
+                        }
+                    }
+                    mvccExecutor.removeAll(actionKey, runVersions);
+                } else {
+                    ret = method.invoke(object, args);
                 }
-                Object ret = method.invoke(object, args);
                 if (((boolean) ret) == false) {
                     return false;
                 }

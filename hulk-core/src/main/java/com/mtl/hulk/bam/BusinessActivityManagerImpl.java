@@ -2,7 +2,6 @@ package com.mtl.hulk.bam;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mtl.hulk.AbstractHulk;
-import com.mtl.hulk.HulkMvccFactory;
 import com.mtl.hulk.aop.interceptor.BrokerInterceptor;
 import com.mtl.hulk.context.BusinessActivityContextHolder;
 import com.mtl.hulk.context.HulkContext;
@@ -68,8 +67,6 @@ public class BusinessActivityManagerImpl extends AbstractHulk implements Busines
         } finally {
             BrokerInterceptor.getTryFutures().clear();
         }
-        listener.setExecutor(HulkMvccFactory.getExecuter(
-                RuntimeContextHolder.getContext().getActivity().getIsolationLevel()));
         return true;
     }
 

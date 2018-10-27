@@ -1,24 +1,24 @@
 package com.mtl.hulk.common;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
 
 public class AutoIncrementGenerator {
 
-    private final static AtomicInteger factor = new AtomicInteger(1);
+    private final static LongAdder factor = new LongAdder();
     private volatile static Integer currentValue;
 
-    public synchronized static void setCurrentValue(Integer currentValue) {
+    public static void setCurrentValue(Integer currentValue) {
         AutoIncrementGenerator.currentValue = currentValue;
     }
 
-    public synchronized static Integer getCurrentValue() {
+    public static Integer getCurrentValue() {
         if (currentValue == null) {
-            currentValue = 1;
+            currentValue = 0;
         }
         return currentValue;
     }
 
-    public static AtomicInteger getFactor() {
+    public static LongAdder getFactor() {
         return factor;
     }
 
