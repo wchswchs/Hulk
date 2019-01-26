@@ -17,6 +17,12 @@
 10. 支持MVCC，RU和RC隔离级别，默认RC
 11. 支持AOF机制持久化事务日志
 
+## 系统架构
+
+<center>
+<img src="image/arch.png" width = "80%" />
+</center>
+
 ## 使用指南
 
 ### Getting Started
