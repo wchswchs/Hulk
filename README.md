@@ -20,7 +20,7 @@
 ## 系统架构
 
 <center>
-<img src="image/arch.png" width = "80%" />
+<img src="系统架构.png" width = "80%" />
 </center>
 
 ## 使用指南
